@@ -69,8 +69,6 @@ It uses the furniture that is already placed in the house. It won't touch your i
 ### Is it safe to use the plugin?
 Since all third-party plugins are not in line with the game's terms of service, there is always an inherent risk. The plugin's automated furniture placement may also be detectable by the server as there is a very short interval between placing each furniture. You can increase the time interval between each furniture placement to reduce this risk.
 
-Overall, I believe that the danger is low since SE focuses more on ToS violations that upset the game-balance (e.g. RMT). You can also reduce your risk by keeping a low profile and not mentioning the use of the plugin within the game. 
-
 ### How do I update the plugin?
 When an update is available, simply return to the plugins window and click on the "Update Plugins" button.
 
@@ -81,20 +79,11 @@ If using the MakePlace app, you can enable `Minimum Float Distance` in settings 
 
 ### Why does the plugin crash sometimes when applying a layout?
 Make sure of the following:
-- Mouse cursor is not hovering over any item (even if the item is behind the plugin UI). When applying a layout, hovering over an item may cause some game code to conflict with the placement process. 
+- Mouse cursor is not hovering over any item (even if the item is behind the plugin UI). When applying a layout, hovering over an item may cause some game code to conflict with the placement process.
 - Character is not in the way of where furniture will be placed
 - No more than 10 items attached to another (e.g. table-top items on tables, wall-mounted items on partition walls)
 
 There is unfortunately no solution to the above issues, since this is tied to how the game operates.
 
 ## Credits
-This plugin builds upon the foundation laid by 3 other great plugins: [HousingPos](https://github.com/Bluefissure/HousingPos), [BDTH](https://github.com/LeonBlade/BDTHPlugin) and [HouseMate](https://github.com/lmcintyre/Housemate). The UI in particular borrows heavily from HousingPos.
-
-## Donate
-Thank you for using the plugin. If you enjoy my work and wish to support me, you can use the below links:
-
-Ko-fi: [https://ko-fi.com/jawslouis](https://ko-fi.com/jawslouis)
-
-Patreon: [https://www.patreon.com/jawslouis](https://www.patreon.com/jawslouis)
-
-Monthly supporters get the special Patron role on Discord, which allows you to view the list of upcoming features and vote on feature prioritization
+This plugin is a continuation of MakePlace, built by Jawslouis which also credits 3 other great plugins: [HousingPos](https://github.com/Bluefissure/HousingPos), [BDTH](https://github.com/LeonBlade/BDTHPlugin) and [HouseMate](https://github.com/lmcintyre/Housemate).
