@@ -6,9 +6,9 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.InteropServices;
 
-using static MakePlacePlugin.MakePlacePlugin;
+using static ReMakePlacePlugin.ReMakePlacePlugin;
 
-namespace MakePlacePlugin
+namespace ReMakePlacePlugin
 {
     public unsafe class Memory
     {

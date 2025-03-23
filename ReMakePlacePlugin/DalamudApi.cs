@@ -4,7 +4,7 @@ using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 
-namespace MakePlacePlugin;
+namespace ReMakePlacePlugin;
 
 public class DalamudApi
 {

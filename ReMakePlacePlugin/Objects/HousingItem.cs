@@ -2,7 +2,7 @@
 using System;
 using System.Numerics;
 
-namespace MakePlacePlugin.Objects
+namespace ReMakePlacePlugin.Objects
 {
     public class HousingItem
     {

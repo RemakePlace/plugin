@@ -1,15 +1,15 @@
 {
   "Author": "Jawslouis",
-  "Name": "MakePlace Plugin",
-  "InternalName": "MakePlacePlugin",
+  "Name": "Re-makePlace Plugin",
+  "InternalName": "ReMakePlacePlugin",
   "Description": "Automatically save & load interior and exterior house layouts. Import/export layouts from the MakePlace program.",
-  "RepoUrl": "https://github.com/jawslouis/MakePlacePlugin",
+  "RepoUrl": "https://github.com/RemakePlace/plugin",
   "Tags": [
     "makeplace",
     "housing",
     "furniture",
     "jawslouis"
   ],
-  "IconUrl": "https://raw.githubusercontent.com/jawslouis/MakePlacePlugin/master/icon.png",
+  "IconUrl": "https://raw.githubusercontent.com/RemakePlace/plugin/master/icon.png",
   "Punchline": "Automatically save & load furniture layouts in your house."
 }

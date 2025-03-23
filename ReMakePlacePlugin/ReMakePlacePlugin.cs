@@ -2,22 +2,22 @@
 using Dalamud.Plugin;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using Lumina.Excel.Sheets;
-using MakePlacePlugin.Objects;
-using MakePlacePlugin.Util;
+using ReMakePlacePlugin.Objects;
+using ReMakePlacePlugin.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using static MakePlacePlugin.Memory;
+using static ReMakePlacePlugin.Memory;
 using HousingFurniture = Lumina.Excel.Sheets.HousingFurniture;
 
-namespace MakePlacePlugin
+namespace ReMakePlacePlugin
 {
 
-    public class MakePlacePlugin : IDalamudPlugin
+    public class ReMakePlacePlugin : IDalamudPlugin
     {
-        public string Name => "MakePlace Plugin";
+        public string Name => "Re-makePlace Plugin";
         public PluginUi Gui { get; private set; }
         public Configuration Config { get; private set; }
 
@@ -58,7 +58,7 @@ namespace MakePlacePlugin
 
         }
 
-        public MakePlacePlugin(IDalamudPluginInterface pi)
+        public ReMakePlacePlugin(IDalamudPluginInterface pi)
         {
             DalamudApi.Initialize(pi);
 

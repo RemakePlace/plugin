@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 
-namespace MakePlacePlugin
+namespace ReMakePlacePlugin
 {
     public class HousingData
     {
@@ -22,7 +22,7 @@ namespace MakePlacePlugin
         private readonly Dictionary<ushort, uint> _painting;
 
 
-        private static MakePlacePlugin Plugin;
+        private static ReMakePlacePlugin Plugin;
 
         private HousingData()
         {
@@ -77,7 +77,7 @@ namespace MakePlacePlugin
 
         public static HousingData Instance { get; private set; }
 
-        public static void Init(MakePlacePlugin plugin)
+        public static void Init(ReMakePlacePlugin plugin)
         {
             Plugin = plugin;
             Instance = new HousingData();

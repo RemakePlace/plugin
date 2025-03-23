@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Numerics;
 
-namespace MakePlacePlugin
+namespace ReMakePlacePlugin
 {
 	class MoveUtil
 	{

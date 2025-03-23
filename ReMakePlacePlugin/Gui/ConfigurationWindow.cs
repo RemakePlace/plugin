@@ -1,19 +1,22 @@
 ﻿using Dalamud.Interface.ImGuiFileDialog;
 using Dalamud.Interface.Textures;
+using Dalamud.Interface.Utility;
+using Dalamud.Interface.Utility.Raii;
 using Dalamud.Utility;
 using ImGuiNET;
 using Lumina.Excel.Sheets;
-using MakePlacePlugin.Objects;
+using ReMakePlacePlugin.Objects;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using static MakePlacePlugin.MakePlacePlugin;
+using static ReMakePlacePlugin.ReMakePlacePlugin;
+using static System.Net.Mime.MediaTypeNames;
 
-namespace MakePlacePlugin.Gui
+namespace ReMakePlacePlugin.Gui
 {
-    public class ConfigurationWindow : Window<MakePlacePlugin>
+    public class ConfigurationWindow : Window<ReMakePlacePlugin>
     {
 
         public Configuration Config => Plugin.Config;
@@ -26,7 +29,7 @@ namespace MakePlacePlugin.Gui
 
         private FileDialogManager FileDialogManager { get; }
 
-        public ConfigurationWindow(MakePlacePlugin plugin) : base(plugin)
+        public ConfigurationWindow(ReMakePlacePlugin plugin) : base(plugin)
         {
             this.FileDialogManager = new FileDialogManager
             {
@@ -36,6 +39,10 @@ namespace MakePlacePlugin.Gui
 
         protected void DrawAllUi()
         {
+            Vector2 minSize = new Vector2(600, 0);
+            Vector2 maxSize = new Vector2(float.MaxValue, float.MaxValue);
+
+            ImGui.SetNextWindowSizeConstraints(minSize, maxSize);
             if (!ImGui.Begin($"{Plugin.Name}", ref WindowVisible, ImGuiWindowFlags.NoScrollWithMouse))
             {
                 return;
@@ -43,6 +50,7 @@ namespace MakePlacePlugin.Gui
             if (ImGui.BeginChild("##SettingsRegion"))
             {
                 DrawGeneralSettings();
+                
                 if (ImGui.BeginChild("##ItemListRegion"))
                 {
                     ImGui.PushStyleColor(ImGuiCol.Header, PURPLE_ALPHA);
@@ -168,7 +176,7 @@ namespace MakePlacePlugin.Gui
             try
             {
                 Plugin.GetGameLayout();
-                MakePlacePlugin.LayoutManager.ExportLayout();
+                ReMakePlacePlugin.LayoutManager.ExportLayout();
             }
             catch (Exception e)
             {
@@ -203,7 +211,14 @@ namespace MakePlacePlugin.Gui
 
         unsafe private void DrawGeneralSettings()
         {
-
+            string pluginDir = DalamudApi.PluginInterface.AssemblyLocation.DirectoryName!;
+            var imagePath = Path.Combine(pluginDir, "images/icon.png");
+            var image = DalamudApi.TextureProvider.GetFromFile(imagePath).GetWrapOrDefault();
+            if (image != null)
+            {
+                ImGui.Image(image.ImGuiHandle, new Vector2(100, 100));
+            }
+            ImGui.SameLine();
             if (ImGui.Checkbox("Label Furniture", ref Config.DrawScreen)) Config.Save();
             if (Config.ShowTooltips && ImGui.IsItemHovered())
                 ImGui.SetTooltip("Show furniture names on the screen");
@@ -310,8 +325,18 @@ namespace MakePlacePlugin.Gui
             if (Config.ShowTooltips && ImGui.IsItemHovered()) ImGui.SetTooltip("Time interval between furniture placements when applying a layout. If this is too low (e.g. 200 ms), some placements may be skipped over.");
 
             ImGui.Dummy(new Vector2(0, 15));
+            
+            bool noFloors = true;
+            try
+            {
+                noFloors = Memory.Instance.GetCurrentTerritory() != Memory.HousingArea.Indoors || Memory.Instance.GetIndoorHouseSize().Equals("Apartment");
+            }
+            catch (NullReferenceException)
+            {
+                // ignore
+            }
 
-            bool noFloors = Memory.Instance.GetCurrentTerritory() != Memory.HousingArea.Indoors || Memory.Instance.GetIndoorHouseSize().Equals("Apartment");
+            //bool noFloors = Memory.Instance.GetCurrentTerritory() != Memory.HousingArea.Indoors || Memory.Instance.GetIndoorHouseSize().Equals("Apartment");
 
             if (!noFloors)
             {
@@ -343,8 +368,236 @@ namespace MakePlacePlugin.Gui
 
         }
 
+        private void DrawItemList(List<HousingItem> itemList, bool isUnused = false)
+        {
+            if (ImGui.Button("Sort"))
+            {
+                itemList.Sort((x, y) =>
+                {
+                    if (x.Name.CompareTo(y.Name) != 0)
+                        return x.Name.CompareTo(y.Name);
+                    if (x.X.CompareTo(y.X) != 0)
+                        return x.X.CompareTo(y.X);
+                    if (x.Y.CompareTo(y.Y) != 0)
+                        return x.Y.CompareTo(y.Y);
+                    if (x.Z.CompareTo(y.Z) != 0)
+                        return x.Z.CompareTo(y.Z);
+                    if (x.Rotate.CompareTo(y.Rotate) != 0)
+                        return x.Rotate.CompareTo(y.Rotate);
+                    return 0;
+                });
+                Config.Save();
+            }
+            ImGui.SameLine();
+            if (ImGui.Button("Clear"))
+            {
+                itemList.Clear();
+                Config.Save();
+            }
+
+            if (!isUnused)
+            {
+                ImGui.SameLine();
+                ImGui.Text("Note: Missing items, incorrect dyes, and items on unselected floors are grayed out");
+            }
+
+            int columns = isUnused ? 4 : 5;
+
+            if (ImGui.BeginTable("ItemList", columns, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.Resizable | ImGuiTableFlags.SizingStretchProp | ImGuiTableFlags.Reorderable))
+            {
+                if (!isUnused)
+                {
+                    ImGui.TableSetupColumn("Place"); // Fixed width (50 pixels)
+                }
+                ImGui.TableSetupColumn("Item");
+                ImGui.TableSetupColumn("Position (X,Y,Z)");
+                ImGui.TableSetupColumn("Rotation");
+                ImGui.TableSetupColumn("Dye/Material");
+                ImGui.TableHeadersRow();
+
+                for (int i = 0; i < itemList.Count(); i++)
+                {
+                    var housingItem = itemList[i];
+
+                    ImGui.TableNextRow();
+                    DrawRow(i, housingItem, !isUnused);
+                    if (housingItem.ItemStruct == IntPtr.Zero)
+                    {
+                        ImGui.PopStyleColor();
+                    }
+
+                }
+
+                ImGui.EndTable();
+            }
+        }
+
         private void DrawRow(int i, HousingItem housingItem, bool showSetPosition = true, int childIndex = -1)
         {
+            ImGui.TableNextColumn();
+            if (showSetPosition)
+            {
+                string uniqueID = childIndex == -1 ? i.ToString() : i.ToString() + "_" + childIndex.ToString();
+                bool noMatch = housingItem.ItemStruct == IntPtr.Zero;
+
+                if (!noMatch)
+                {
+                    ImGui.PushStyleVar(ImGuiStyleVar.CellPadding, new Vector2(0.0f, 0.0f));
+                    ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.5f, 0.5f));
+                    if (ImGui.Selectable("Set" + "##" + uniqueID, false, 0, new Vector2(ImGui.GetContentRegionAvail().X, 20.0f)))
+                    {
+                        Plugin.MatchLayout();
+
+                        if (housingItem.ItemStruct != IntPtr.Zero)
+                        {
+                            SetItemPosition(housingItem);
+                        }
+                        else
+                        {
+                            LogError($"Unable to set position for {housingItem.Name}");
+                        }
+                    }
+                    ImGui.PopStyleVar(2);
+                }
+                ImGui.TableNextColumn();
+            }
+
+            var displayName = housingItem.Name;
+
+            if (DalamudApi.DataManager.GetExcelSheet<Item>().TryGetRow(housingItem.ItemKey, out var item))
+            {
+                DrawIcon(item.Icon, new Vector2(20, 20));
+                ImGui.SameLine();
+            }
+
+            if (housingItem.ItemStruct == IntPtr.Zero)
+            {
+                ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.5f, 0.5f, 0.5f, 1));
+            }
+            ImGui.Text(displayName);
+            ImGui.TableNextColumn();
+
+            if (!housingItem.CorrectLocation) ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.5f, 0.5f, 0.5f, 1));
+            ImGui.Text($"{housingItem.X:N4}, {housingItem.Y:N4}, {housingItem.Z:N4}");
+            if (!housingItem.CorrectLocation) ImGui.PopStyleColor();
+            ImGui.TableNextColumn();
+
+            if (!housingItem.CorrectRotation) ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.5f, 0.5f, 0.5f, 1));
+            ImGui.Text($"{(housingItem.Rotate * (180)/ Math.PI):N3}");
+            if (!housingItem.CorrectRotation) ImGui.PopStyleColor();
+            ImGui.TableNextColumn();
+
+            var stain = DalamudApi.DataManager.GetExcelSheet<Stain>().GetRowOrDefault(housingItem.Stain);
+            var colorName = stain?.Name;
+
+            if (housingItem.Stain != 0)
+            {
+                Utils.StainButton("dye_" + i, stain.Value, new Vector2(20));
+                ImGui.SameLine();
+
+                if (!housingItem.DyeMatch) ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.5f, 0.5f, 0.5f, 1));
+                ImGui.Text($"{colorName}");
+                if (!housingItem.DyeMatch) ImGui.PopStyleColor();
+            }
+            else if (housingItem.MaterialItemKey != 0)
+            {
+                if (DalamudApi.DataManager.GetExcelSheet<Item>().TryGetRow(housingItem.MaterialItemKey, out var mitem))
+                {
+                    if (!housingItem.DyeMatch) ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.5f, 0.5f, 0.5f, 1));
+                    DrawIcon(mitem.Icon, new Vector2(20, 20));
+                    ImGui.SameLine();
+                    ImGui.Text(mitem.Name.ToString());
+                    if (!housingItem.DyeMatch) ImGui.PopStyleColor();
+                }
+            }
+        }
+
+        private void DrawFixtureList(List<Fixture> fixtureList)
+        {
+            try
+            {
+                if (ImGui.Button("Clear"))
+                {
+                    fixtureList.Clear();
+                    Config.Save();
+                }
+
+                if (ImGui.BeginTable("FixtureList", 3, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg))
+                {
+                    ImGui.TableSetupColumn("Level");
+                    ImGui.TableSetupColumn("Fixture");
+                    ImGui.TableSetupColumn("Item");
+                    ImGui.TableHeadersRow();
+
+                    foreach (var fixture in fixtureList)
+                    {
+                        ImGui.TableNextRow();
+                        ImGui.TableNextColumn();
+                        ImGui.Text(fixture.level);
+
+                        ImGui.TableNextColumn();
+                        ImGui.Text(fixture.type);
+
+                        ImGui.TableNextColumn();
+                        if (DalamudApi.DataManager.GetExcelSheet<Item>().TryGetRow(fixture.itemId, out var item))
+                        {
+                            DrawIcon(item.Icon, new Vector2(20, 20));
+                            ImGui.SameLine();
+                        }
+                        ImGui.Text(fixture.name);
+                    }
+
+                    ImGui.EndTable();
+                }
+            }
+            catch (Exception e)
+            {
+                LogError(e.Message, e.StackTrace);
+            }
+        }
+
+        /*private void DrawRow(int i, HousingItem housingItem, bool showSetPosition = true, int childIndex = -1)
+        {
+            if (showSetPosition)
+            {
+                string uniqueID = childIndex == -1 ? i.ToString() : i.ToString() + "_" + childIndex.ToString();
+
+                bool noMatch = housingItem.ItemStruct == IntPtr.Zero;
+
+                if (!noMatch)
+                {
+                    if (ImGui.Button("Set" + "##" + uniqueID))
+                    {
+                        Plugin.MatchLayout();
+
+                        if (housingItem.ItemStruct != IntPtr.Zero)
+                        {
+                            SetItemPosition(housingItem);
+                        }
+                        else
+                        {
+                            LogError($"Unable to set position for {housingItem.Name}");
+                        }
+                    }
+                }
+                ImGui.NextColumn();
+            }
+
+            var displayName = housingItem.Name;
+
+            if (DalamudApi.DataManager.GetExcelSheet<Item>().TryGetRow(housingItem.ItemKey, out var item))
+            {
+                DrawIcon(item.Icon, new Vector2(20, 20));
+                ImGui.SameLine();
+            }
+
+            if (housingItem.ItemStruct == IntPtr.Zero)
+            {
+                ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.5f, 0.5f, 0.5f, 1));
+            }
+            ImGui.Text(displayName);
+            ImGui.NextColumn();
+
             if (!housingItem.CorrectLocation) ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.5f, 0.5f, 0.5f, 1));
             ImGui.Text($"{housingItem.X:N4}, {housingItem.Y:N4}, {housingItem.Z:N4}");
             if (!housingItem.CorrectLocation) ImGui.PopStyleColor();
@@ -374,47 +627,19 @@ namespace MakePlacePlugin.Gui
             else if (housingItem.MaterialItemKey != 0)
             {
 
-                if (DalamudApi.DataManager.GetExcelSheet<Item>().TryGetRow(housingItem.MaterialItemKey, out var item))
+                if (DalamudApi.DataManager.GetExcelSheet<Item>().TryGetRow(housingItem.MaterialItemKey, out var mitem))
                 {
                     if (!housingItem.DyeMatch) ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.5f, 0.5f, 0.5f, 1));
 
-                    DrawIcon(item.Icon, new Vector2(20, 20));
+                    DrawIcon(mitem.Icon, new Vector2(20, 20));
                     ImGui.SameLine();
-                    ImGui.Text(item.Name.ToString());
+                    ImGui.Text(mitem.Name.ToString());
 
                     if (!housingItem.DyeMatch) ImGui.PopStyleColor();
                 }
 
             }
             ImGui.NextColumn();
-
-            if (showSetPosition)
-            {
-                string uniqueID = childIndex == -1 ? i.ToString() : i.ToString() + "_" + childIndex.ToString();
-
-                bool noMatch = housingItem.ItemStruct == IntPtr.Zero;
-
-                if (!noMatch)
-                {
-                    if (ImGui.Button("Set" + "##" + uniqueID))
-                    {
-                        Plugin.MatchLayout();
-
-                        if (housingItem.ItemStruct != IntPtr.Zero)
-                        {
-                            SetItemPosition(housingItem);
-                        }
-                        else
-                        {
-                            LogError($"Unable to set position for {housingItem.Name}");
-                        }
-                    }
-                }
-
-                ImGui.NextColumn();
-            }
-
-
         }
 
         private void DrawFixtureList(List<Fixture> fixtureList)
@@ -464,8 +689,6 @@ namespace MakePlacePlugin.Gui
         private void DrawItemList(List<HousingItem> itemList, bool isUnused = false)
         {
 
-
-
             if (ImGui.Button("Sort"))
             {
                 itemList.Sort((x, y) =>
@@ -501,40 +724,26 @@ namespace MakePlacePlugin.Gui
             int columns = isUnused ? 4 : 5;
 
 
+
+
             ImGui.Columns(columns, "ItemList", true);
             ImGui.Separator();
+            if (!isUnused)
+            {
+                ImGui.Text("Place");
+                //TODO, migrate this whole thing to tables to stop being so fugly
+                //ImGui.SetColumnWidth(0, 50.0f);
+                ImGui.NextColumn();
+            }
             ImGui.Text("Item"); ImGui.NextColumn();
             ImGui.Text("Position (X,Y,Z)"); ImGui.NextColumn();
             ImGui.Text("Rotation"); ImGui.NextColumn();
             ImGui.Text("Dye/Material"); ImGui.NextColumn();
 
-            if (!isUnused)
-            {
-                ImGui.Text("Set Position"); ImGui.NextColumn();
-            }
-
             ImGui.Separator();
             for (int i = 0; i < itemList.Count(); i++)
             {
                 var housingItem = itemList[i];
-                var displayName = housingItem.Name;
-
-                if (DalamudApi.DataManager.GetExcelSheet<Item>().TryGetRow(housingItem.ItemKey, out var item))
-                {
-                    DrawIcon(item.Icon, new Vector2(20, 20));
-                    ImGui.SameLine();
-                }
-
-                if (housingItem.ItemStruct == IntPtr.Zero)
-                {
-                    ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.5f, 0.5f, 0.5f, 1));
-                }
-
-                ImGui.Text(displayName);
-
-
-
-                ImGui.NextColumn();
                 DrawRow(i, housingItem, !isUnused);
 
                 if (housingItem.ItemStruct == IntPtr.Zero)
@@ -547,7 +756,7 @@ namespace MakePlacePlugin.Gui
 
             ImGui.Columns(1);
 
-        }
+        }*/
 
         #endregion
 

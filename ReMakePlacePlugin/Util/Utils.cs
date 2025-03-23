@@ -1,12 +1,12 @@
 ﻿using ImGuiNET;
 using Lumina.Excel.Sheets;
-using MakePlacePlugin.Objects;
+using ReMakePlacePlugin.Objects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 
-namespace MakePlacePlugin
+namespace ReMakePlacePlugin
 {
     public static class Utils
     {

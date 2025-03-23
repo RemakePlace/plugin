@@ -8,8 +8,8 @@
 	<PropertyGroup>
 		<TargetFramework>net8.0-windows</TargetFramework>
 		<LangVersion>latest</LangVersion>
-		<AssemblyTitle>MakePlacePlugin</AssemblyTitle>
-		<Product>MakePlacePlugin</Product>
+		<AssemblyTitle>ReMakePlacePlugin</AssemblyTitle>
+		<Product>ReMakePlacePlugin</Product>
 		<Version>$(PluginVersion)</Version>
 		<FileVersion>$(PluginVersion)</FileVersion>
 		<AssemblyVersion>$(PluginVersion)</AssemblyVersion>
@@ -20,21 +20,13 @@
 		<RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
 	</PropertyGroup>
 
-	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-		<DebugType>full</DebugType>
-		<DefineConstants>DEBUG;TRACE</DefineConstants>
-	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
 	  <DebugType>full</DebugType>
 	  <DefineConstants>DEBUG;TRACE</DefineConstants>
 	</PropertyGroup>
 
-	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-		<DebugType>pdbonly</DebugType>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+	<PropertyGroup Condition="'$(Configuration)'=='Release'">
 	  <DebugType>pdbonly</DebugType>
 	</PropertyGroup>
 
