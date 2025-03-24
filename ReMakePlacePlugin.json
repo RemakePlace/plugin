@@ -12,15 +12,16 @@
     "housing",
     "furniture",
     "remakeplace",
-	"re-makeplace"
+    "re-makeplace"
   ],
   "DalamudApiLevel": 11,
   "LoadPriority": 0,
   "IconUrl": "https://raw.githubusercontent.com/ReMakePlace/Plugin/master/icon.png",
+  "IsTestingExclusive": "True",
   "DownloadCount": 461505,
-  "DownloadLinkInstall": "https://github.com/RemakePlace/plugin/releases/download/v7.18.0/MakePlacePlugin.zip",
-  "DownloadLinkTesting": "https://github.com/RemakePlace/plugin/releases/download/v7.18.0/MakePlacePlugin.zip",
-  "DownloadLinkUpdate": "https://github.com/RemakePlace/plugin/releases/download/v7.18.0/MakePlacePlugin.zip",
+  "DownloadLinkInstall": "https://github.com/RemakePlace/plugin/releases/download/v7.18.0/ReMakePlacePlugin.zip",
+  "DownloadLinkTesting": "https://github.com/RemakePlace/plugin/releases/download/v7.18.0/ReMakePlacePlugin.zip",
+  "DownloadLinkUpdate": "https://github.com/RemakePlace/plugin/releases/download/v7.18.0/ReMakePlacePlugin.zip",
   "_isDip17Plugin": false,
   "_Dip17Channel": null
 }]
