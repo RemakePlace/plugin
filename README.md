@@ -9,7 +9,6 @@ A plugin to automatically save and load housing furniture layouts for FFXIV. It 
   * [Loading a layout into the game](#loading-a-layout-into-the-game)  
 * [FAQ](#faq)
 * [Credits](#credits)
-* [Donate](#donate)
 
 
 ## Installation
