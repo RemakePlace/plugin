@@ -14,10 +14,10 @@ using System.Text.Unicode;
 using FFXIVClientStructs.FFXIV.Client.Game.MJI;
 using Lumina.Excel.Sheets;
 using Lumina.Extensions;
-using MakePlacePlugin.Objects;
-using static MakePlacePlugin.MakePlacePlugin;
+using ReMakePlacePlugin.Objects;
+using static ReMakePlacePlugin.ReMakePlacePlugin;
 
-namespace MakePlacePlugin
+namespace ReMakePlacePlugin
 {
 
     public class Transform
@@ -167,11 +167,11 @@ namespace MakePlacePlugin
     public class SaveLayoutManager
     {
         public static Configuration Config;
-        public static MakePlacePlugin Plugin;
+        public static ReMakePlacePlugin Plugin;
 
         public static List<(Color, uint)> ColorList;
 
-        public SaveLayoutManager(MakePlacePlugin plugin, Configuration config)
+        public SaveLayoutManager(ReMakePlacePlugin plugin, Configuration config)
         {
             Config = config;
             Plugin = plugin;

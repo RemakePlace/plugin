@@ -3,17 +3,17 @@ using Dalamud.Interface.Textures;
 using Dalamud.Utility;
 using ImGuiNET;
 using Lumina.Excel.Sheets;
-using MakePlacePlugin.Objects;
+using ReMakePlacePlugin.Objects;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using static MakePlacePlugin.MakePlacePlugin;
+using static ReMakePlacePlugin.ReMakePlacePlugin;
 
-namespace MakePlacePlugin.Gui
+namespace ReMakePlacePlugin.Gui
 {
-    public class ConfigurationWindow : Window<MakePlacePlugin>
+    public class ConfigurationWindow : Window<ReMakePlacePlugin>
     {
 
         public Configuration Config => Plugin.Config;
@@ -26,7 +26,7 @@ namespace MakePlacePlugin.Gui
 
         private FileDialogManager FileDialogManager { get; }
 
-        public ConfigurationWindow(MakePlacePlugin plugin) : base(plugin)
+        public ConfigurationWindow(ReMakePlacePlugin plugin) : base(plugin)
         {
             this.FileDialogManager = new FileDialogManager
             {
@@ -36,7 +36,7 @@ namespace MakePlacePlugin.Gui
 
         protected void DrawAllUi()
         {
-            if (!ImGui.Begin($"{Plugin.Name}", ref WindowVisible, ImGuiWindowFlags.NoScrollWithMouse))
+            if (!ImGui.Begin($"Re-makePlace Plugin", ref WindowVisible, ImGuiWindowFlags.NoScrollWithMouse))
             {
                 return;
             }
@@ -168,7 +168,7 @@ namespace MakePlacePlugin.Gui
             try
             {
                 Plugin.GetGameLayout();
-                MakePlacePlugin.LayoutManager.ExportLayout();
+                ReMakePlacePlugin.LayoutManager.ExportLayout();
             }
             catch (Exception e)
             {

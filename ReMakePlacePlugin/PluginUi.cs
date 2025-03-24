@@ -1,14 +1,14 @@
 ﻿using System;
-using MakePlacePlugin.Gui;
+using ReMakePlacePlugin.Gui;
 
-namespace MakePlacePlugin
+namespace ReMakePlacePlugin
 {
     public class PluginUi : IDisposable
     {
-        private readonly MakePlacePlugin _plugin;
+        private readonly ReMakePlacePlugin _plugin;
         public ConfigurationWindow ConfigWindow { get; }
 
-        public PluginUi(MakePlacePlugin plugin)
+        public PluginUi(ReMakePlacePlugin plugin)
         {
             ConfigWindow = new ConfigurationWindow(plugin);
 

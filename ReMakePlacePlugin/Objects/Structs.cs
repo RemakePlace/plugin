@@ -3,7 +3,7 @@ using System;
 using System.Numerics;
 using System.Runtime.InteropServices;
 
-namespace MakePlacePlugin
+namespace ReMakePlacePlugin
 {
     public enum SortType
     {
@@ -195,7 +195,7 @@ namespace MakePlacePlugin
                 // return Marshal.PtrToStructure<HousingController>(_housingController);
                 // return *(HousingController*) _housingController;
 
-                return global::MakePlacePlugin.HousingController.Get(_housingController);
+                return global::ReMakePlacePlugin.HousingController.Get(_housingController);
             }
         }
 
@@ -204,7 +204,7 @@ namespace MakePlacePlugin
             get
             {
                 if (_indoorAreaData == IntPtr.Zero) return null;
-                return global::MakePlacePlugin.IndoorAreaData.Get(_indoorAreaData);
+                return global::ReMakePlacePlugin.IndoorAreaData.Get(_indoorAreaData);
             }
         }
     }
