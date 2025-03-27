@@ -1,6 +1,6 @@
 # ReMakePlace Plugin
 
-A plugin to automatically save and load housing furniture layouts for FFXIV. It can also import/export layouts from the Original [MakePlace](https://jawslouis.itch.io/makeplace) program and plugin as well as the Newer [ReMakePlace](https://github.com/RemakePlace/plugin).
+A plugin to automatically save and load housing furniture layouts for FFXIV. It can also import/export layouts from the Original [MakePlace](https://jawslouis.itch.io/makeplace) program and plugin as well as the Newer [ReMakePlace](https://github.com/RemakePlace/app).
 
 ## Contents
 * [Installation](#installation)
@@ -12,16 +12,19 @@ A plugin to automatically save and load housing furniture layouts for FFXIV. It 
 
 
 ## Installation
-
 * You will need to use the [FFXIV Quick Launcher](https://goatcorp.github.io/) to run the game. This allows third-party plugins (such as this) to be used.
 * Open the settings window by using the command `/xlsettings` in the chat, or by hitting `Esc` and selecting Dalamud Settings.
 * Click on the "Experimental" tab
-* Copy the following url into a new line on the Custom Plugin Repositories section: https://raw.githubusercontent.com/RemakePlace/plugin/master/ReMakePlacePlugin.json  
-  - Note: This plugin does not work for the CN server. [Follow the steps here to try using an older version of the plugin](https://wiki.makeplace.app/en/plugin/CN-Server)
+* Copy the following url into a new line on the Custom Plugin Repositories section:
+  ```
+  https://raw.githubusercontent.com/RemakePlace/plugin/master/ReMakePlacePlugin.json
+  ```
 * Click on the `+` button. Make sure the new entry has "Enabled" checked.
 * Click the "Save and Close" button
 * Open the plugins window by typing `/xlplugins` in the chat, or hit `Esc` and select Dalamud Plugins
 * Search for "ReMakePlace Plugin" and click "Install"
+> [!NOTE]
+> This plugin will not work for the CN server. [Follow the steps here to try using an older version of the plugin](https://wiki.makeplace.app/en/plugin/CN-Server)
 
 ## Usage
 Type `/remakeplace` to open the plugin screen. Most functions are only available when in Rotate Furniture mode (Housing -> Indoor/Outdoor Furnishings. Click on the Rotate button).
