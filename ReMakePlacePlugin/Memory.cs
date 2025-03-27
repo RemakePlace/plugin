@@ -284,6 +284,10 @@ namespace ReMakePlacePlugin
                 LogError($"Invalid territory row: {GetTerritoryTypeId()}");
                 return HousingArea.None;
             }
+            if (territoryRow.Equals(null) || territoryRow.Name.ToString().Equals("r1i5")) // blacklist company workshop from editing since it's not actually a housing area
+            {
+                return HousingArea.None;
+            }
 
             if (territoryRow.Name.ToString().Equals("h1m2"))
             {
