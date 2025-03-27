@@ -311,9 +311,9 @@ namespace ReMakePlacePlugin.Gui
 
             ImGui.Dummy(new Vector2(0, 15));
 
-            bool noFloors = Memory.Instance.GetCurrentTerritory() != Memory.HousingArea.Indoors || Memory.Instance.GetIndoorHouseSize().Equals("Apartment");
+            bool hasFloors = Memory.Instance.GetCurrentTerritory() == Memory.HousingArea.Indoors && !Memory.Instance.GetIndoorHouseSize().Equals("Apartment");
 
-            if (!noFloors)
+            if (hasFloors)
             {
 
                 ImGui.Text("Selected Floors");

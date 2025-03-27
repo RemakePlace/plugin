@@ -53,7 +53,7 @@ namespace ReMakePlacePlugin
             HookManager.Dispose();
 
             DalamudApi.ClientState.TerritoryChanged -= TerritoryChanged;
-            DalamudApi.CommandManager.RemoveHandler("/makeplace");
+            DalamudApi.CommandManager.RemoveHandler("/remakeplace");
             Gui?.Dispose();
 
         }
@@ -67,7 +67,7 @@ namespace ReMakePlacePlugin
 
             Initialize();
 
-            DalamudApi.CommandManager.AddHandler("/makeplace", new CommandInfo(CommandHandler)
+            DalamudApi.CommandManager.AddHandler("/remakeplace", new CommandInfo(CommandHandler)
             {
                 HelpMessage = "load config window."
             });
@@ -79,7 +79,7 @@ namespace ReMakePlacePlugin
             Memory.Init();
             LayoutManager = new SaveLayoutManager(this, Config);
 
-            DalamudApi.PluginLog.Info("ReMakePlace Plugin v7.18.0 initialized");
+            DalamudApi.PluginLog.Info("ReMakePlace Plugin v7.2.0 initialized");
         }
         public void Initialize()
         {

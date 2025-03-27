@@ -1,6 +1,6 @@
-# MakePlace Plugin
+# ReMakePlace Plugin
 
-A plugin to automatically save and load housing furniture layouts for FFXIV. It can also import/export layouts from the [MakePlace](https://jawslouis.itch.io/makeplace) program since it uses the same file format.
+A plugin to automatically save and load housing furniture layouts for FFXIV. It can also import/export layouts from the Original [MakePlace](https://jawslouis.itch.io/makeplace) program and plugin as well as the Newer [ReMakePlace](https://github.com/RemakePlace/plugin).
 
 ## Contents
 * [Installation](#installation)
@@ -16,15 +16,15 @@ A plugin to automatically save and load housing furniture layouts for FFXIV. It 
 * You will need to use the [FFXIV Quick Launcher](https://goatcorp.github.io/) to run the game. This allows third-party plugins (such as this) to be used.
 * Open the settings window by using the command `/xlsettings` in the chat, or by hitting `Esc` and selecting Dalamud Settings.
 * Click on the "Experimental" tab
-* Copy the following url into a new line on the Custom Plugin Repositories section: https://raw.githubusercontent.com/jawslouis/MakePlacePlugin/master/MakePlacePlugin.json  
+* Copy the following url into a new line on the Custom Plugin Repositories section: https://raw.githubusercontent.com/RemakePlace/plugin/master/ReMakePlacePlugin.json  
   - Note: This plugin does not work for the CN server. [Follow the steps here to try using an older version of the plugin](https://wiki.makeplace.app/en/plugin/CN-Server)
 * Click on the `+` button. Make sure the new entry has "Enabled" checked.
 * Click the "Save and Close" button
 * Open the plugins window by typing `/xlplugins` in the chat, or hit `Esc` and select Dalamud Plugins
-* Search for "MakePlace Plugin" and click "Install"
+* Search for "ReMakePlace Plugin" and click "Install"
 
 ## Usage
-Type `/makeplace` to open the plugin screen. Most functions are only available when in Rotate Furniture mode (Housing -> Indoor/Outdoor Furnishings. Click on the Rotate button).
+Type `/remakeplace` to open the plugin screen. Most functions are only available when in Rotate Furniture mode (Housing -> Indoor/Outdoor Furnishings. Click on the Rotate button).
 
 ### Saving a layout from the game
 * Make sure you are in furniture mode
@@ -67,14 +67,14 @@ It uses the furniture that is already placed in the house. It won't touch your i
 
 ### Is it safe to use the plugin?
 Since all third-party plugins are not in line with the game's terms of service, there is always an inherent risk. The plugin's automated furniture placement may also be detectable by the server as there is a very short interval between placing each furniture. You can increase the time interval between each furniture placement to reduce this risk.
-
+ 
 ### How do I update the plugin?
 When an update is available, simply return to the plugins window and click on the "Update Plugins" button.
 
 ### Why does the furniture snap back to the floor/wall after I apply a layout and exit the furnishing menu?
 Items have a minimum float distance, below which they will snap back to the floor. Similarly, wall-mounted items have a minimum distance they need to be from a wall or partition, otherwise they will snap to it. Unfortunately, this is a game limitation and you will need to adjust your design.
 
-If using the MakePlace app, you can enable `Minimum Float Distance` in settings to get a visual indicator when placing furniture.
+If using the ReMakePlace app, you can enable `Minimum Float Distance` in settings to get a visual indicator when placing furniture.
 
 ### Why does the plugin crash sometimes when applying a layout?
 Make sure of the following:
