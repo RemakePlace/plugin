@@ -3,6 +3,7 @@ using Dalamud.Interface.Textures;
 using Dalamud.Utility;
 using ImGuiNET;
 using Lumina.Excel.Sheets;
+using ReMakePlacePlugin.Localization;
 using ReMakePlacePlugin.Objects;
 using System;
 using System.Collections.Generic;
@@ -10,7 +11,6 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using static ReMakePlacePlugin.ReMakePlacePlugin;
-
 namespace ReMakePlacePlugin.Gui
 {
     public class ConfigurationWindow : Window<ReMakePlacePlugin>
@@ -214,7 +214,18 @@ namespace ReMakePlacePlugin.Gui
             if (ImGui.Checkbox("##hideTooltipsOnOff", ref Config.ShowTooltips)) Config.Save();
             ImGui.SameLine();
             ImGui.TextUnformatted("Show Tooltips");
-
+            ImGui.SameLine();
+            ImGui.SetNextItemWidth(50);
+            if (ImGui.BeginCombo("Language",Config.PluginLang.ToString())) {
+                foreach (var PluginLang in Enum.GetNames(typeof(Lang))) {
+                    if(ImGui.Selectable(PluginLang)){
+                        Config.PluginLang = (Lang)Enum.Parse(typeof(Lang), PluginLang);
+                        Log(String.Format("Language Set to {0}",Config.PluginLang.ToString()));
+                    }
+                }
+                ImGui.EndCombo();
+                
+            }
             ImGui.Dummy(new Vector2(0, 10));
 
 

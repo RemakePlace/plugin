@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Dalamud.Configuration;
 using Dalamud.Plugin;
-using ReMakePlacePlugin.Objects;
+using ReMakePlacePlugin.Localization;
 
 namespace ReMakePlacePlugin
 {
@@ -12,6 +12,7 @@ namespace ReMakePlacePlugin
         public int Version { get; set; } = 0;
 
         public bool ShowTooltips = true;
+        public Lang PluginLang = Lang.en;
         public bool DrawScreen = false;
         public float DrawDistance = 0;
         public List<int> HiddenScreenItemHistory = new List<int>();
