@@ -20,16 +20,21 @@ namespace ReMakePlacePlugin
             {"Level", new ArrayList() {"Level","楼","Étage","Stock",null}}
         };
 
-        internal static string Localize(string toLocalize,int langId)
+        public static string Localize(string toLocalize, int langId)
         {
             string localizedString = null;
-            if (LocalizationStrings.ContainsKey(toLocalize)){
+            if (LocalizationStrings.ContainsKey(toLocalize))
+            {
                 ArrayList localizedStrings = null;
-                LocalizationStrings.TryGetValue(toLocalize,out localizedStrings);
-                localizedString = localizedStrings[langId].ToString();
-            }
-            if (localizedString == null) {
-                localizedString = String.Format("String \"{0}\" not localized",toLocalize);
+                LocalizationStrings.TryGetValue(toLocalize, out localizedStrings);
+                if (localizedStrings[langId] != null)
+                {
+                    localizedString = localizedStrings[langId].ToString();
+                }
+                else
+                {
+                    localizedString = String.Format("String \"{0}\" not localized for language \"{1}\"", toLocalize, ((Lang)langId).ToString());
+                }
             }
             return localizedString;
         }
