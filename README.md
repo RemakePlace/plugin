@@ -40,7 +40,8 @@ Type `/remakeplace` to open the plugin screen. Most functions are only available
   * The plugin will not touch furniture that are in your inventory or storage
   * The plugin will not dye furniture for you.
   * If you re-load the design, all the furniture in the list should be white and not grayed out
-* Click on `Load From` and select the .json design file. Sit back and wait for the placement to finish!
+* **If you wish for the plugin to move furniture, check the box for `☑ Apply Layout`**
+* Click on `Load From` and select the .json design file.
   * Your layout should also show up in the plugin
   * If there are crashes, check [this section of the FAQ](#why-does-the-plugin-crash-sometimes-when-applying-a-layout):    
 
