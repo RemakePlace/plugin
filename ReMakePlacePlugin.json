@@ -17,7 +17,7 @@
   "DalamudApiLevel": 12,
   "LoadPriority": 0,
   "IconUrl": "https://raw.githubusercontent.com/ReMakePlace/Plugin/master/icon.png",
-  "IsTestingExclusive": "True",
+  "IsTestingExclusive": "False",
   "DownloadCount": 461505,
   "DownloadLinkInstall": "https://github.com/ReMakePlace/plugin/releases/download/v7.2.0/ReMakePlacePlugin.zip",
   "DownloadLinkTesting": "https://github.com/ReMakePlace/plugin/releases/download/v7.2.0/ReMakePlacePlugin.zip",
