@@ -10,7 +10,7 @@ namespace ReMakePlacePlugin
         public int Version { get; set; } = 0;
 
         public bool ShowTooltips = true;
-        public Localization.Lang PluginLang = Localization.Lang.en;
+        public static Localization.Lang PluginLang = Localization.Lang.en;
         public bool DrawScreen = false;
         public float DrawDistance = 0;
         public List<int> HiddenScreenItemHistory = new List<int>();

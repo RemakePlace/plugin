@@ -216,11 +216,11 @@ namespace ReMakePlacePlugin.Gui
             ImGui.TextUnformatted("Show Tooltips");
             ImGui.SameLine();
             ImGui.SetNextItemWidth(50);
-            if (ImGui.BeginCombo("Language",Config.PluginLang.ToString())) {
+            if (ImGui.BeginCombo("Language",Configuration.PluginLang.ToString())) {
                 foreach (var PluginLang in Enum.GetNames(typeof(Localization.Lang))) {
                     if(ImGui.Selectable(PluginLang)){
-                        Config.PluginLang = (Localization.Lang)Enum.Parse(typeof(Localization.Lang), PluginLang);
-                        Log(String.Format("Language Set to {0}",Config.PluginLang.ToString()));
+                        Configuration.PluginLang = (Localization.Lang)Enum.Parse(typeof(Localization.Lang), PluginLang);
+                        Log(String.Format("Language Set to {0}",Configuration.PluginLang.ToString()));
                     }
                 }
                 ImGui.EndCombo();                
@@ -440,7 +440,7 @@ namespace ReMakePlacePlugin.Gui
                 ImGui.Columns(3, "FixtureList", true);
                 ImGui.Separator();
 
-                ImGui.Text(Localization.Localize("Level",(int)Config.PluginLang)); ImGui.NextColumn();
+                ImGui.Text(Localization.Localize("Level")); ImGui.NextColumn();
                 ImGui.Text("Fixture"); ImGui.NextColumn();
                 ImGui.Text("Item"); ImGui.NextColumn();
 
