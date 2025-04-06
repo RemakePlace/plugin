@@ -50,35 +50,35 @@ namespace ReMakePlacePlugin.Gui
                     ImGui.PushStyleColor(ImGuiCol.HeaderActive, PURPLE);
 
 
-                    if (ImGui.CollapsingHeader("Interior Furniture", ImGuiTreeNodeFlags.DefaultOpen))
+                    if (ImGui.CollapsingHeader(Localization.Localize("Interior Furniture"), ImGuiTreeNodeFlags.DefaultOpen))
                     {
-                        ImGui.PushID("interior");
+                        ImGui.PushID(Localization.Localize("interior"));
                         DrawItemList(Plugin.InteriorItemList);
                         ImGui.PopID();
                     }
-                    if (ImGui.CollapsingHeader("Exterior Furniture", ImGuiTreeNodeFlags.DefaultOpen))
+                    if (ImGui.CollapsingHeader(Localization.Localize("Exterior Furniture"), ImGuiTreeNodeFlags.DefaultOpen))
                     {
-                        ImGui.PushID("exterior");
+                        ImGui.PushID(Localization.Localize("exterior"));
                         DrawItemList(Plugin.ExteriorItemList);
                         ImGui.PopID();
                     }
 
-                    if (ImGui.CollapsingHeader("Interior Fixtures", ImGuiTreeNodeFlags.DefaultOpen))
+                    if (ImGui.CollapsingHeader(Localization.Localize("Interior Fixtures"), ImGuiTreeNodeFlags.DefaultOpen))
                     {
-                        ImGui.PushID("interiorFixture");
+                        ImGui.PushID(Localization.Localize("interiorFixture"));
                         DrawFixtureList(Plugin.Layout.interiorFixture);
                         ImGui.PopID();
                     }
 
-                    if (ImGui.CollapsingHeader("Exterior Fixtures", ImGuiTreeNodeFlags.DefaultOpen))
+                    if (ImGui.CollapsingHeader(Localization.Localize("Exterior Fixtures"), ImGuiTreeNodeFlags.DefaultOpen))
                     {
-                        ImGui.PushID("exteriorFixture");
+                        ImGui.PushID(Localization.Localize("exteriorFixture"));
                         DrawFixtureList(Plugin.Layout.exteriorFixture);
                         ImGui.PopID();
                     }
-                    if (ImGui.CollapsingHeader("Unused Furniture", ImGuiTreeNodeFlags.DefaultOpen))
+                    if (ImGui.CollapsingHeader(Localization.Localize("Unused Furniture"), ImGuiTreeNodeFlags.DefaultOpen))
                     {
-                        ImGui.PushID("unused");
+                        ImGui.PushID(Localization.Localize("unused"));
                         DrawItemList(Plugin.UnusedItemList, true);
                         ImGui.PopID();
                     }
@@ -123,11 +123,11 @@ namespace ReMakePlacePlugin.Gui
         {
             if (Memory.Instance.GetCurrentTerritory() == Memory.HousingArea.Island)
             {
-                LogError("(Manage Furnishings -> Place Furnishing Glamours)");
+                LogError(Localization.Localize("(Manage Furnishings -> Place Furnishing Glamours)"));
             }
             else
             {
-                LogError("(Housing -> Indoor/Outdoor Furnishings)");
+                LogError(Localization.Localize("(Housing -> Indoor/Outdoor Furnishings)"));
             }
         }
 
@@ -135,7 +135,7 @@ namespace ReMakePlacePlugin.Gui
         {
             if (Memory.Instance.IsHousingMode()) return true;
 
-            LogError("Unable to save layouts outside of Layout mode");
+            LogError(Localization.Localize("Unable to save layouts outside of Layout mode"));
             LogLayoutMode();
             return false;
         }
@@ -144,13 +144,13 @@ namespace ReMakePlacePlugin.Gui
         {
             if (Config.ApplyLayout && !Memory.Instance.CanEditItem())
             {
-                LogError("Unable to load and apply layouts outside of Rotate Layout mode");
+                LogError(Localization.Localize("Unable to load and apply layouts outside of Rotate Layout mode"));
                 return false;
             }
 
             if (!Config.ApplyLayout && !Memory.Instance.IsHousingMode())
             {
-                LogError("Unable to load layouts outside of Layout mode");
+                LogError(Localization.Localize("Unable to load layouts outside of Layout mode"));
                 LogLayoutMode();
                 return false;
             }
@@ -204,19 +204,19 @@ namespace ReMakePlacePlugin.Gui
         unsafe private void DrawGeneralSettings()
         {
 
-            if (ImGui.Checkbox("Label Furniture", ref Config.DrawScreen)) Config.Save();
+            if (ImGui.Checkbox(Localization.Localize("Label Furniture"), ref Config.DrawScreen)) Config.Save();
             if (Config.ShowTooltips && ImGui.IsItemHovered())
-                ImGui.SetTooltip("Show furniture names on the screen");
+                ImGui.SetTooltip(Localization.Localize("Show furniture names on the screen"));
 
             ImGui.SameLine();
             ImGui.Dummy(new Vector2(10, 0));
             ImGui.SameLine();
             if (ImGui.Checkbox("##hideTooltipsOnOff", ref Config.ShowTooltips)) Config.Save();
             ImGui.SameLine();
-            ImGui.TextUnformatted("Show Tooltips");
+            ImGui.TextUnformatted(Localization.Localize("Show Tooltips"));
             ImGui.SameLine();
             ImGui.SetNextItemWidth(50);
-            if (ImGui.BeginCombo("Language",Configuration.PluginLang.ToString())) {
+            if (ImGui.BeginCombo(Localization.Localize("Language"),Configuration.PluginLang.ToString())) {
                 foreach (var PluginLang in Enum.GetNames(typeof(Localization.Lang))) {
                     if(ImGui.Selectable(PluginLang)){
                         Configuration.PluginLang = (Localization.Lang)Enum.Parse(typeof(Localization.Lang), PluginLang);
@@ -228,29 +228,29 @@ namespace ReMakePlacePlugin.Gui
             ImGui.Dummy(new Vector2(0, 10));
 
 
-            ImGui.Text("Layout");
+            ImGui.Text(Localization.Localize("Layout"));
 
             if (!Config.SaveLocation.IsNullOrEmpty())
             {
-                ImGui.Text($"Current file location: {Config.SaveLocation}");
+                ImGui.Text($"{Localization.Localize("Current file location")}: {Config.SaveLocation}");
 
                 if (ImGui.Button("Save"))
                 {
                     SaveLayoutToFile();
                 }
-                if (Config.ShowTooltips && ImGui.IsItemHovered()) ImGui.SetTooltip("Save layout to current file location");
+                if (Config.ShowTooltips && ImGui.IsItemHovered()) ImGui.SetTooltip(Localization.Localize("Save layout to current file location"));
                 ImGui.SameLine();
 
             }
 
-            if (ImGui.Button("Save As"))
+            if (ImGui.Button(Localization.Localize("Save As")))
             {
                 if (CheckModeForSave())
                 {
                     string saveName = "save";
                     if (!Config.SaveLocation.IsNullOrEmpty()) saveName = Path.GetFileNameWithoutExtension(Config.SaveLocation);
 
-                    FileDialogManager.SaveFileDialog("Select a Save Location", ".json", saveName, "json", (bool ok, string res) =>
+                    FileDialogManager.SaveFileDialog(Localization.Localize("Select a Save Location"), ".json", saveName, "json", (bool ok, string res) =>
                     {
                         if (!ok)
                         {
@@ -264,28 +264,28 @@ namespace ReMakePlacePlugin.Gui
                     }, Path.GetDirectoryName(Config.SaveLocation));
                 }
             }
-            if (Config.ShowTooltips && ImGui.IsItemHovered()) ImGui.SetTooltip("Save layout to file");
+            if (Config.ShowTooltips && ImGui.IsItemHovered()) ImGui.SetTooltip(Localization.Localize("Save layout to file"));
 
             ImGui.SameLine(); ImGui.Dummy(new Vector2(20, 0)); ImGui.SameLine();
 
             if (!Config.SaveLocation.IsNullOrEmpty())
             {
-                if (ImGui.Button("Load"))
+                if (ImGui.Button(Localization.Localize("Load")))
                 {
                     LoadLayoutFromFile();
                 }
-                if (Config.ShowTooltips && ImGui.IsItemHovered()) ImGui.SetTooltip("Load layout from current file location");
+                if (Config.ShowTooltips && ImGui.IsItemHovered()) ImGui.SetTooltip(Localization.Localize("Load layout from current file location"));
                 ImGui.SameLine();
             }
 
-            if (ImGui.Button("Load From"))
+            if (ImGui.Button(Localization.Localize("Load From")))
             {
                 if (CheckModeForLoad())
                 {
                     string saveName = "save";
                     if (!Config.SaveLocation.IsNullOrEmpty()) saveName = Path.GetFileNameWithoutExtension(Config.SaveLocation);
 
-                    FileDialogManager.OpenFileDialog("Select a Layout File", ".json", (bool ok, List<string> res) =>
+                    FileDialogManager.OpenFileDialog(Localization.Localize("Select a Layout File"), ".json", (bool ok, List<string> res) =>
                     {
                         if (!ok)
                         {
@@ -300,11 +300,11 @@ namespace ReMakePlacePlugin.Gui
                     }, 1, Path.GetDirectoryName(Config.SaveLocation));
                 }
             }
-            if (Config.ShowTooltips && ImGui.IsItemHovered()) ImGui.SetTooltip("Load layout from file");
+            if (Config.ShowTooltips && ImGui.IsItemHovered()) ImGui.SetTooltip(Localization.Localize("Load layout from file"));
 
             ImGui.SameLine(); ImGui.Dummy(new Vector2(10, 0)); ImGui.SameLine();
 
-            if (ImGui.Checkbox("Apply Layout", ref Config.ApplyLayout))
+            if (ImGui.Checkbox(Localization.Localize("Apply Layout"), ref Config.ApplyLayout))
             {
                 Config.Save();
             }
@@ -312,12 +312,12 @@ namespace ReMakePlacePlugin.Gui
             ImGui.SameLine(); ImGui.Dummy(new Vector2(10, 0)); ImGui.SameLine();
 
             ImGui.PushItemWidth(100);
-            if (ImGui.InputInt("Placement Interval (ms)", ref Config.LoadInterval))
+            if (ImGui.InputInt(Localization.Localize("Placement Interval (ms)"), ref Config.LoadInterval))
             {
                 Config.Save();
             }
             ImGui.PopItemWidth();
-            if (Config.ShowTooltips && ImGui.IsItemHovered()) ImGui.SetTooltip("Time interval between furniture placements when applying a layout. If this is too low (e.g. 200 ms), some placements may be skipped over.");
+            if (Config.ShowTooltips && ImGui.IsItemHovered()) ImGui.SetTooltip(Localization.Localize("Time interval between furniture placements when applying a layout. If this is too low (e.g. 200 ms), some placements may be skipped over."));
 
             ImGui.Dummy(new Vector2(0, 15));
 
@@ -326,21 +326,21 @@ namespace ReMakePlacePlugin.Gui
             if (hasFloors)
             {
 
-                ImGui.Text("Selected Floors");
+                ImGui.Text(Localization.Localize("Selected Floors"));
 
-                if (ImGui.Checkbox("Basement", ref Config.Basement))
+                if (ImGui.Checkbox(Localization.Localize("Basement"), ref Config.Basement))
                 {
                     Config.Save();
                 }
                 ImGui.SameLine(); ImGui.Dummy(new Vector2(10, 0)); ImGui.SameLine();
 
-                if (ImGui.Checkbox("Ground Floor", ref Config.GroundFloor))
+                if (ImGui.Checkbox(Localization.Localize("Ground Floor"), ref Config.GroundFloor))
                 {
                     Config.Save();
                 }
                 ImGui.SameLine(); ImGui.Dummy(new Vector2(10, 0)); ImGui.SameLine();
 
-                if (Memory.Instance.HasUpperFloor() && ImGui.Checkbox("Upper Floor", ref Config.UpperFloor))
+                if (Memory.Instance.HasUpperFloor() && ImGui.Checkbox(Localization.Localize("Upper Floor"), ref Config.UpperFloor))
                 {
                     Config.Save();
                 }
@@ -431,18 +431,18 @@ namespace ReMakePlacePlugin.Gui
         {
             try
             {
-                if (ImGui.Button("Clear"))
+                if (ImGui.Button(Localization.Localize("Clear")))
                 {
                     fixtureList.Clear();
                     Config.Save();
                 }
 
-                ImGui.Columns(3, "FixtureList", true);
+                ImGui.Columns(3, Localization.Localize("FixtureList"), true);
                 ImGui.Separator();
 
                 ImGui.Text(Localization.Localize("Level")); ImGui.NextColumn();
-                ImGui.Text("Fixture"); ImGui.NextColumn();
-                ImGui.Text("Item"); ImGui.NextColumn();
+                ImGui.Text(Localization.Localize("Fixture")); ImGui.NextColumn();
+                ImGui.Text(Localization.Localize("Item")); ImGui.NextColumn();
 
                 ImGui.Separator();
 
@@ -504,23 +504,23 @@ namespace ReMakePlacePlugin.Gui
             if (!isUnused)
             {
                 ImGui.SameLine();
-                ImGui.Text("Note: Missing items, incorrect dyes, and items on unselected floors are grayed out");
+                ImGui.Text(Localization.Localize("Note: Missing items, incorrect dyes, and items on unselected floors are grayed out"));
             }
 
             // name, position, r, color, set
             int columns = isUnused ? 4 : 5;
 
 
-            ImGui.Columns(columns, "ItemList", true);
+            ImGui.Columns(columns, Localization.Localize("ItemList"), true);
             ImGui.Separator();
-            ImGui.Text("Item"); ImGui.NextColumn();
-            ImGui.Text("Position (X,Y,Z)"); ImGui.NextColumn();
-            ImGui.Text("Rotation"); ImGui.NextColumn();
-            ImGui.Text("Dye/Material"); ImGui.NextColumn();
+            ImGui.Text(Localization.Localize("Item")); ImGui.NextColumn();
+            ImGui.Text($"{Localization.Localize("Position")} (X,Y,Z)"); ImGui.NextColumn();
+            ImGui.Text(Localization.Localize("Rotation")); ImGui.NextColumn();
+            ImGui.Text(Localization.Localize("Dye/Material")); ImGui.NextColumn();
 
             if (!isUnused)
             {
-                ImGui.Text("Set Position"); ImGui.NextColumn();
+                ImGui.Text(Localization.Localize("Set Position")); ImGui.NextColumn();
             }
 
             ImGui.Separator();
@@ -612,7 +612,7 @@ namespace ReMakePlacePlugin.Gui
                         {
                             if (!Memory.Instance.CanEditItem())
                             {
-                                LogError("Unable to set position while not in rotate layout mode");
+                                LogError(Localization.Localize("Unable to set position while not in rotate layout mode"));
                                 continue;
                             }
 
