@@ -15,6 +15,12 @@ namespace ReMakePlacePlugin
             de,
             jp
         }
+        /*
+        The key is what should be referenced elsewhere when a string is in need of localization.
+        Language order within a specific dictonary entry corresponds to the index of the language in the Lang enum.
+        Entries left null will show an error in the UI stating the key for the string and that it is not localized.
+        When using Localization.Localize() make sure the key exists in this dictonary or it will crash dalamud.
+        */
         public static Dictionary<string, ArrayList> LocalizationStrings = new Dictionary<string, ArrayList>(){
             {"langName", new ArrayList() {"English","中文","Française","Deutsche","日本語"}},
             {"lang", new ArrayList() {"Language","文","Langue","Sprache","言語"}},
