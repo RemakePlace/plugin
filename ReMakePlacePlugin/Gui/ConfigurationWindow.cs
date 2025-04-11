@@ -218,18 +218,21 @@ namespace ReMakePlacePlugin.Gui
             ImGui.SameLine();
             ImGui.SetNextItemWidth(85);
             ArrayList langNames = null;
-            Localization.LocalizationStrings.TryGetValue("langName",out langNames);
-            var currentLang = langNames[(int)Enum.Parse(typeof(Localization.Lang),Configuration.PluginLang.ToString())].ToString();
-            if (ImGui.BeginCombo(Localization.Localize("lang"),currentLang)) {
+            Localization.LocalizationStrings.TryGetValue("langName", out langNames);
+            var currentLang = langNames[(int)Enum.Parse(typeof(Localization.Lang), Configuration.PluginLang.ToString())].ToString();
+            if (ImGui.BeginCombo(Localization.Localize("lang"), currentLang))
+            {
                 int langInd = 0;
-                foreach (var PluginLang in Enum.GetNames(typeof(Localization.Lang))) {
-                    if(ImGui.Selectable(langNames[langInd].ToString())){
+                foreach (var PluginLang in Enum.GetNames(typeof(Localization.Lang)))
+                {
+                    if (ImGui.Selectable(langNames[langInd].ToString()))
+                    {
                         Configuration.PluginLang = (Localization.Lang)langInd;
-                        Log(String.Format("Language Set to {0}",Configuration.PluginLang.ToString()));
+                        Log(String.Format("Language Set to {0}", Configuration.PluginLang.ToString()));
                     }
                     langInd++;
                 }
-                ImGui.EndCombo();                
+                ImGui.EndCombo();
             }
             ImGui.Dummy(new Vector2(0, 10));
 
