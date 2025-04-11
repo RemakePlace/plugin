@@ -536,11 +536,9 @@ namespace ReMakePlacePlugin.Gui
 
 
                 ImGui.NextColumn();
-                if (housingItem.ItemStruct != IntPtr.Zero) // Make sure we don't try and draw a row for a housing item that doesn't exist. If it does get passed it corrupts all ImGui interfaces managed by dalamud.
-                {
-                    DrawRow(i, housingItem, !isUnused);
-                }
-                else
+                 // Make sure we don't try and draw a row for a housing item that doesn't exist. If it does get passed it corrupts all ImGui interfaces managed by dalamud.
+                DrawRow(i, housingItem, !isUnused);
+                if (housingItem.ItemStruct == IntPtr.Zero)
                 {
                     ImGui.PopStyleColor();
                 }
