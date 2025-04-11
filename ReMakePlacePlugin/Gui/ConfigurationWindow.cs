@@ -398,6 +398,7 @@ namespace ReMakePlacePlugin.Gui
                 {
                     if (ImGui.Button("Set" + "##" + uniqueID))
                     {
+                        Plugin.GetGameLayout(); // Recheck the layout here to prevent the case where a removed item is attempted to be placed and a null pointer is passed into ImGui
                         Plugin.MatchLayout();
 
                         if (housingItem.ItemStruct != IntPtr.Zero)
@@ -535,9 +536,11 @@ namespace ReMakePlacePlugin.Gui
 
 
                 ImGui.NextColumn();
-                DrawRow(i, housingItem, !isUnused);
-
-                if (housingItem.ItemStruct == IntPtr.Zero)
+                if (housingItem.ItemStruct != IntPtr.Zero) // Make sure we don't try and draw a row for a housing item that doesn't exist. If it does get passed it corrupts all ImGui interfaces managed by dalamud.
+                {
+                    DrawRow(i, housingItem, !isUnused);
+                }
+                else
                 {
                     ImGui.PopStyleColor();
                 }
