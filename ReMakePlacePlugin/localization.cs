@@ -65,7 +65,7 @@ namespace ReMakePlacePlugin
             {"position", new ArrayList() {"Position","坐标","Position",null,null}},
             {"rotation", new ArrayList() {"Rotation","角度","Rotation",null,null}},
             {"dyeMat", new ArrayList() {"Dye/Material","染剂/材料","Teindre/Revêtement",null,null}},
-            {"setPos", new ArrayList() {"Set Position","放置坐标","Définir la position",null,null}},
+            {"setPos", new ArrayList() {"Set Position","布置","Définir la position",null,null}},
         };
 
         public static string Localize(string toLocalize)
