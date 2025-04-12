@@ -486,7 +486,7 @@ namespace ReMakePlacePlugin.Gui
 
 
 
-            if (ImGui.Button("Sort"))
+            if (ImGui.Button(Localization.Localize("sort")))
             {
                 itemList.Sort((x, y) =>
                 {
@@ -505,7 +505,7 @@ namespace ReMakePlacePlugin.Gui
                 Config.Save();
             }
             ImGui.SameLine();
-            if (ImGui.Button("Clear"))
+            if (ImGui.Button(Localization.Localize("clear")))
             {
                 itemList.Clear();
                 Config.Save();

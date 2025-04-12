@@ -27,6 +27,7 @@ namespace ReMakePlacePlugin
             {"level", new ArrayList() {"Level","层级","Étage","Stock","階"}},
             {"fixture", new ArrayList() {"Fixture","固定位置","Élément",null,null}},
             {"item", new ArrayList() {"Item","家具","Objet",null,null}},
+            {"sort", new ArrayList() {"Sort","排序","Trier",null,null}},
             {"intFurn", new ArrayList() {"Interior Furniture","室内家具","Meubles",null,null}},
             {"extFurn", new ArrayList() {"Exterior Furniture","室外庭具","Mobilier de jardin",null,null}},
             {"intFixt", new ArrayList() {"Interior Fixtures","室内固定位置","Éléments d'intérieur",null,null}},
