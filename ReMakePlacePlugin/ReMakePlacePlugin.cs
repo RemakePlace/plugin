@@ -708,7 +708,7 @@ namespace ReMakePlacePlugin
                     break;
             }
 
-            Log(String.Format("Loaded {0} furniture items", itemList.Count));
+            DalamudApi.PluginLog.Debug(String.Format("Loaded {0} furniture items", itemList.Count));
 
             Config.HiddenScreenItemHistory = new List<int>();
             Config.Save();

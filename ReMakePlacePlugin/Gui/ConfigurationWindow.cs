@@ -262,6 +262,7 @@ namespace ReMakePlacePlugin.Gui
             {
                 if (ImGui.Button("Load"))
                 {
+                    Config.Save();
                     LoadLayoutFromFile();
                 }
                 if (Config.ShowTooltips && ImGui.IsItemHovered()) ImGui.SetTooltip("Load layout from current file location");
@@ -398,8 +399,8 @@ namespace ReMakePlacePlugin.Gui
                 {
                     if (ImGui.Button("Set" + "##" + uniqueID))
                     {
-                        Plugin.GetGameLayout(); // Recheck the layout here to prevent the case where a removed item is attempted to be placed and a null pointer is passed into ImGui
                         Plugin.MatchLayout();
+                        Plugin.GetGameLayout();
 
                         if (housingItem.ItemStruct != IntPtr.Zero)
                         {
