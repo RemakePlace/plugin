@@ -79,7 +79,7 @@ namespace ReMakePlacePlugin
             Memory.Init();
             LayoutManager = new SaveLayoutManager(this, Config);
 
-            DalamudApi.PluginLog.Info("ReMakePlace Plugin v7.2.1 initialized");
+            DalamudApi.PluginLog.Info("ReMakePlace Plugin v7.2.2 initialized");
         }
         public void Initialize()
         {
@@ -708,7 +708,7 @@ namespace ReMakePlacePlugin
                     break;
             }
 
-            Log(String.Format("Loaded {0} furniture items", itemList.Count));
+            DalamudApi.PluginLog.Debug(String.Format("Loaded {0} furniture items", itemList.Count));
 
             Config.HiddenScreenItemHistory = new List<int>();
             Config.Save();
