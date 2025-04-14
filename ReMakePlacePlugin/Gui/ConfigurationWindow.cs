@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using static ReMakePlacePlugin.ReMakePlacePlugin;
 
 namespace ReMakePlacePlugin.Gui
@@ -34,8 +35,16 @@ namespace ReMakePlacePlugin.Gui
             };
         }
 
+        private void SafeMatch(){ // I was told tnot to enabled saving or viewing designs outside of housing mode so this blocks the matching outside of housing mode.
+            if (Memory.Instance.IsHousingMode()){
+                Plugin.MatchLayout();
+            }
+        }
+
         protected void DrawAllUi()
-        {
+        {   
+            
+            DalamudApi.Framework.RunOnTick(SafeMatch, TimeSpan.FromMilliseconds(100));
             if (!ImGui.Begin($"Re-makePlace Plugin", ref WindowVisible, ImGuiWindowFlags.NoScrollWithMouse))
             {
                 return;
@@ -400,7 +409,6 @@ namespace ReMakePlacePlugin.Gui
                     if (ImGui.Button("Set" + "##" + uniqueID))
                     {
                         Plugin.MatchLayout();
-                        Plugin.GetGameLayout();
 
                         if (housingItem.ItemStruct != IntPtr.Zero)
                         {

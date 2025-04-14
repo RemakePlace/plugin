@@ -79,7 +79,7 @@ namespace ReMakePlacePlugin
             Memory.Init();
             LayoutManager = new SaveLayoutManager(this, Config);
 
-            DalamudApi.PluginLog.Info("ReMakePlace Plugin v7.2.2 initialized");
+            DalamudApi.PluginLog.Info("ReMakePlace Plugin v7.2.3 initialized");
         }
         public void Initialize()
         {
@@ -107,8 +107,8 @@ namespace ReMakePlacePlugin
             /*
             The call made by the XIV client has some strange behaviour.
             It can either place the item pointer passed to it or it retrieves the activeItem from the housing object.
-            Passing the active item probably led to more crashes. 
-            Defaulted to the easier path of just passing in a zero pointer so that the call populates itself form the housing object.
+            I had previously speculated that this lead to crashes when I implemented this and Jaws coppied it but better memory management seems to ave resolved the issue.
+            Updated to use the actual item since we handle them more safely elsewhere.
             */
             DalamudApi.PluginLog.Debug(string.Format("placing item {0}", (housing + 24).ToString()));
             PlaceItemHook.Original(housing, item);
@@ -246,7 +246,7 @@ namespace ReMakePlacePlugin
             MemInstance.WritePosition(position);
             MemInstance.WriteRotation(rotation);
 
-            PlaceItem(nint.Zero);
+            PlaceItem(rowItem.ItemStruct);
 
             rowItem.CorrectLocation = true;
             rowItem.CorrectRotation = true;
