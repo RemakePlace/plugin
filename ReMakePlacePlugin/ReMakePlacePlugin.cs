@@ -85,7 +85,7 @@ namespace ReMakePlacePlugin
             Memory.Init();
             LayoutManager = new SaveLayoutManager(this, Config);
 
-            DalamudApi.PluginLog.Info("ReMakePlace Plugin v7.2.4 initialized");
+            DalamudApi.PluginLog.Info("ReMakePlace Plugin v7.2.5 initialized");
         }
         public void Initialize()
         {
