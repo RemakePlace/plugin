@@ -18,6 +18,8 @@ namespace ReMakePlacePlugin
     public class ReMakePlacePlugin : IDalamudPlugin
     {
         public string Name => "ReMakePlace Plugin";
+
+        private string[] commandNames = ["remakeplace", "rmp", "makeplace"];
         public PluginUi Gui { get; private set; }
         public Configuration Config { get; private set; }
 
@@ -53,7 +55,9 @@ namespace ReMakePlacePlugin
             HookManager.Dispose();
 
             DalamudApi.ClientState.TerritoryChanged -= TerritoryChanged;
-            DalamudApi.CommandManager.RemoveHandler("/remakeplace");
+            foreach (string commandName in commandNames){
+                DalamudApi.CommandManager.RemoveHandler($"/{commandName}");
+            }
             Gui?.Dispose();
 
         }
@@ -66,11 +70,13 @@ namespace ReMakePlacePlugin
             Config.Save();
 
             Initialize();
-
-            DalamudApi.CommandManager.AddHandler("/remakeplace", new CommandInfo(CommandHandler)
-            {
-                HelpMessage = "load config window."
-            });
+            
+            foreach (string commandName in commandNames){
+                DalamudApi.CommandManager.AddHandler($"/{commandName}", new CommandInfo(CommandHandler)
+                {
+                    HelpMessage = "load config window."
+                });
+            }
             Gui = new PluginUi(this);
             DalamudApi.ClientState.TerritoryChanged += TerritoryChanged;
 

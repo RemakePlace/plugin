@@ -27,7 +27,7 @@ A plugin to automatically save and load housing furniture layouts for FFXIV. It 
 > This plugin will not work for the CN server. [Follow the steps here to try using an older version of the plugin](https://wiki.makeplace.app/en/plugin/CN-Server)
 
 ## Usage
-Type `/remakeplace` to open the plugin screen. Most functions are only available when in Rotate Furniture mode (Housing -> Indoor/Outdoor Furnishings. Click on the Rotate button).
+Type `/remakeplace`,`/makeplace`, or `/rmp` to open the plugin screen. Most functions are only available when in Rotate Furniture mode (Housing -> Indoor/Outdoor Furnishings. Click on the Rotate button).
 
 ### Saving a layout from the game
 * Make sure you are in furniture mode
