@@ -321,7 +321,12 @@ namespace ReMakePlacePlugin.Gui
 
             ImGui.Dummy(new Vector2(0, 15));
 
-            bool hasFloors = Memory.Instance.GetCurrentTerritory() == Memory.HousingArea.Indoors && !Memory.Instance.GetIndoorHouseSize().Equals("Apartment");
+            bool hasFloors = false;
+            try {
+                hasFloors = Memory.Instance.GetCurrentTerritory() == Memory.HousingArea.Indoors && !Memory.Instance.GetIndoorHouseSize().Equals("Apartment");
+            } catch (NullReferenceException){
+                // Thanks zbee
+            }
 
             if (hasFloors)
             {
