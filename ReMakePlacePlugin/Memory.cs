@@ -281,7 +281,7 @@ namespace ReMakePlacePlugin
         {
             if (!DalamudApi.DataManager.GetExcelSheet<TerritoryType>().TryGetRow(GetTerritoryTypeId(), out var territoryRow))
             {
-                LogError($"Invalid territory row: {GetTerritoryTypeId()}");
+                DalamudApi.PluginLog.Debug($"Invalid territory row: {GetTerritoryTypeId()}");
                 return HousingArea.None;
             }
             if (territoryRow.Equals(null) || territoryRow.Name.ToString().Equals("r1i5")) // blacklist company workshop from editing since it's not actually a housing area
