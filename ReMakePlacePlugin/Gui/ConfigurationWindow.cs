@@ -9,7 +9,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using static ReMakePlacePlugin.ReMakePlacePlugin;
 
 namespace ReMakePlacePlugin.Gui
@@ -35,7 +34,7 @@ namespace ReMakePlacePlugin.Gui
             };
         }
 
-        private void SafeMatch(){ // I was told tnot to enabled saving or viewing designs outside of housing mode so this blocks the matching outside of housing mode.
+        private void SafeMatch(){ // I was told not to enabled saving or viewing designs outside of housing mode so this blocks the matching outside of housing mode.
             if (Memory.Instance.IsHousingMode()){
                 Plugin.MatchLayout();
             }
@@ -45,7 +44,7 @@ namespace ReMakePlacePlugin.Gui
         {   
             
             DalamudApi.Framework.RunOnTick(SafeMatch, TimeSpan.FromMilliseconds(100));
-            if (!ImGui.Begin($"Re-makePlace Plugin", ref WindowVisible, ImGuiWindowFlags.NoScrollWithMouse))
+            if (!ImGui.Begin($"ReMakePlace Plugin", ref WindowVisible, ImGuiWindowFlags.NoScrollWithMouse))
             {
                 return;
             }
@@ -318,6 +317,29 @@ namespace ReMakePlacePlugin.Gui
             }
             ImGui.PopItemWidth();
             if (Config.ShowTooltips && ImGui.IsItemHovered()) ImGui.SetTooltip("Time interval between furniture placements when applying a layout. If this is too low (e.g. 200 ms), some placements may be skipped over.");
+
+            if (ImGui.Button("Export to Teamcraft"))
+            {
+                var allItemsList = new Dictionary<string,int>();
+                for (int i = 0; i < Plugin.InteriorItemList.Count();i++) {
+                    var itemId = Plugin.InteriorItemList[i].ItemKey.ToString();
+                    if (allItemsList.ContainsKey(itemId)) {
+                        allItemsList[itemId]++;
+                    } else {
+                        allItemsList.Add(itemId, 1);
+                    }
+                }
+                for (int i = 0; i < Plugin.ExteriorItemList.Count();i++) {
+                    var itemId = Plugin.ExteriorItemList[i].ItemKey.ToString();
+                    if (allItemsList.ContainsKey(itemId)) {
+                        allItemsList[itemId]++;
+                    } else {
+                        allItemsList.Add(itemId, 1);
+                    }
+                }
+                Utils.TeamcraftExport(allItemsList);
+            }
+            if (Config.ShowTooltips && ImGui.IsItemHovered()) ImGui.SetTooltip("Generates a list import link for TeamCraft.");
 
             ImGui.Dummy(new Vector2(0, 15));
 
