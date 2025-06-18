@@ -44,7 +44,7 @@ namespace ReMakePlacePlugin.Gui
         {   
             
             DalamudApi.Framework.RunOnTick(SafeMatch, TimeSpan.FromMilliseconds(100));
-            if (!ImGui.Begin($"ReMakePlace Plugin", ref WindowVisible, ImGuiWindowFlags.NoScrollWithMouse))
+            if (!ImGui.Begin(Plugin.Name, ref WindowVisible, ImGuiWindowFlags.NoScrollWithMouse))
             {
                 return;
             }
