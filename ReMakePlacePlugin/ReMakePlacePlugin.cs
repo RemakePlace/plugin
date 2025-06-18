@@ -174,12 +174,6 @@ namespace ReMakePlacePlugin
         public unsafe void RecursivelyPlaceItems()
         {
 
-            if (!Memory.Instance.CanEditItem() || ItemsToPlace.Count == 0)
-            {
-                Cleanup();
-                return;
-            }
-
             try
             {
                 while (ItemsToPlace.Count > 0)
