@@ -3,6 +3,7 @@
   "Name": "ReMakePlace Plugin",
   "InternalName": "ReMakePlacePlugin",
   "AssemblyVersion": "7.2.6",
+  "TestingAssemblyVersion": "7.2.7",
   "Punchline": "Automatically save & load furniture layouts in your house.",
   "Description": "Automatically save & load the positions of house furniture. Import/export layouts from the ReMakePlace program.",
   "ApplicableVersion": "any",
@@ -15,6 +16,7 @@
     "re-makeplace"
   ],
   "DalamudApiLevel": 12,
+  "TestingDalamudApiLevel": 12,
   "LoadPriority": 0,
   "IconUrl": "https://raw.githubusercontent.com/ReMakePlace/Plugin/master/icon.png",
   "IsTestingExclusive": "False",
