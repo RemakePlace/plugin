@@ -84,7 +84,7 @@ namespace ReMakePlacePlugin
             Memory.Init();
             LayoutManager = new SaveLayoutManager(this, Config);
 
-            DalamudApi.PluginLog.Info("ReMakePlace Plugin v7.2.6 initialized");
+            DalamudApi.PluginLog.Info("ReMakePlace Plugin v7.2.7 initialized");
         }
         public void Initialize()
         {
@@ -115,7 +115,8 @@ namespace ReMakePlacePlugin
             I had previously speculated that this lead to crashes when I implemented this and Jaws coppied it but better memory management seems to ave resolved the issue.
             Updated to use the actual item since we handle them more safely elsewhere.
             */
-            DalamudApi.PluginLog.Debug(string.Format("placing item {0}", (housing + 24).ToString()));
+            DalamudApi.PluginLog.Debug($"item detour housing {housing + 24}");
+            DalamudApi.PluginLog.Debug($"item detour item {item}");
             PlaceItemHook.Original(housing, item);
         }
         unsafe static public void PlaceItem(IntPtr item)
@@ -194,9 +195,9 @@ namespace ReMakePlacePlugin
                         continue;
                     }
 
-                    SetItemPosition(item);
-
                     DalamudApi.Framework.RunOnTick(RecursivelyPlaceItems, TimeSpan.FromMilliseconds(Config.LoadInterval));
+
+                    SetItemPosition(item);
                     return;
                 }
 
@@ -253,6 +254,7 @@ namespace ReMakePlacePlugin
 
             PlaceItem(rowItem.ItemStruct);
 
+            DalamudApi.PluginLog.Debug($"{rowItem.GetLocation()}");
             rowItem.CorrectLocation = true;
             rowItem.CorrectRotation = true;
 
