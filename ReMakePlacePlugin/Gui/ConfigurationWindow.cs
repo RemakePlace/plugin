@@ -1,7 +1,9 @@
 ﻿using Dalamud.Interface.ImGuiFileDialog;
 using Dalamud.Interface.Textures;
 using Dalamud.Utility;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
+using Dalamud.Bindings.ImGuizmo;
+using Dalamud.Bindings.ImPlot;
 using Lumina.Excel.Sheets;
 using ReMakePlacePlugin.Objects;
 using System;
@@ -119,7 +121,7 @@ namespace ReMakePlacePlugin.Gui
             if (icon < 65000)
             {
                 var iconTexture = DalamudApi.TextureProvider.GetFromGameIcon(new GameIconLookup(icon));
-                ImGui.Image(iconTexture.GetWrapOrEmpty().ImGuiHandle, size);
+                ImGui.Image(iconTexture.GetWrapOrEmpty().Handle, size);
             }
         }
         #endregion
