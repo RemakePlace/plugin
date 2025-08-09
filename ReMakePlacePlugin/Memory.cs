@@ -1,6 +1,7 @@
 ﻿using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.MJI;
 using Lumina.Excel.Sheets;
+using Microsoft.VisualBasic;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
@@ -281,7 +282,8 @@ namespace ReMakePlacePlugin
         {
             if (!DalamudApi.DataManager.GetExcelSheet<TerritoryType>().TryGetRow(GetTerritoryTypeId(), out var territoryRow))
             {
-                DalamudApi.PluginLog.Debug($"Invalid territory row: {GetTerritoryTypeId()}");
+                var territoryRowId = GetTerritoryTypeId();
+                if (territoryRowId != 0) { DalamudApi.PluginLog.Debug($"Invalid territory row: {territoryRowId}"); }
                 return HousingArea.None;
             }
             if (territoryRow.Equals(null) || territoryRow.Name.ToString().Equals("r1i5")) // blacklist company workshop from editing since it's not actually a housing area

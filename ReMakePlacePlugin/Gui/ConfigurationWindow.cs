@@ -1,7 +1,7 @@
 ﻿using Dalamud.Interface.ImGuiFileDialog;
 using Dalamud.Interface.Textures;
 using Dalamud.Utility;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using Lumina.Excel.Sheets;
 using ReMakePlacePlugin.Objects;
 using System;
@@ -119,7 +119,7 @@ namespace ReMakePlacePlugin.Gui
             if (icon < 65000)
             {
                 var iconTexture = DalamudApi.TextureProvider.GetFromGameIcon(new GameIconLookup(icon));
-                ImGui.Image(iconTexture.GetWrapOrEmpty().ImGuiHandle, size);
+                ImGui.Image(iconTexture.GetWrapOrEmpty().Handle, size);
             }
         }
         #endregion
@@ -390,7 +390,7 @@ namespace ReMakePlacePlugin.Gui
             ImGui.NextColumn();
 
             if (!housingItem.CorrectRotation) ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.5f, 0.5f, 0.5f, 1));
-            ImGui.Text($"{housingItem.Rotate:N3}"); ImGui.NextColumn();
+            ImGui.Text($"{Utils.radToDeg(housingItem.Rotate):N3}"); ImGui.NextColumn();
             if (!housingItem.CorrectRotation) ImGui.PopStyleColor();
 
             var stain = DalamudApi.DataManager.GetExcelSheet<Stain>().GetRowOrDefault(housingItem.Stain);
