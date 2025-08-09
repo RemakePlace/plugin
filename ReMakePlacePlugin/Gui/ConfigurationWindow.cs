@@ -390,7 +390,7 @@ namespace ReMakePlacePlugin.Gui
             ImGui.NextColumn();
 
             if (!housingItem.CorrectRotation) ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.5f, 0.5f, 0.5f, 1));
-            ImGui.Text($"{housingItem.Rotate:N3}"); ImGui.NextColumn();
+            ImGui.Text($"{Utils.radToDeg(housingItem.Rotate):N3}"); ImGui.NextColumn();
             if (!housingItem.CorrectRotation) ImGui.PopStyleColor();
 
             var stain = DalamudApi.DataManager.GetExcelSheet<Stain>().GetRowOrDefault(housingItem.Stain);

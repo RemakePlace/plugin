@@ -103,7 +103,7 @@ namespace ReMakePlacePlugin
             Dalamud.Utility.Util.OpenLink(address);
         }
 
-        public static void TeamcraftExport(Dictionary<string,int>itemList)
+        public static void TeamcraftExport(Dictionary<string, int> itemList)
         {
             var teamcraftLink = MakeTeamcraftList(itemList);
             OpenLink(teamcraftLink);
@@ -133,7 +133,7 @@ namespace ReMakePlacePlugin
             }
         }
 
-        public static string MakeTeamcraftList(Dictionary<string,int> itemList)
+        public static string MakeTeamcraftList(Dictionary<string, int> itemList)
         {
             var teamcraftUrl = "https://ffxivteamcraft.com/import/";
             var itemListString = "";
@@ -150,6 +150,20 @@ namespace ReMakePlacePlugin
             var b64EncodedList = Base64Url.Encode(itemListString);
             var teamcraftListLink = teamcraftUrl + b64EncodedList;
             return teamcraftListLink;
+        }
+
+        public static float radToDeg(float radians)
+        {
+            var degrees = Math.Round((radians/ Math.PI)* 180,3);
+            if (degrees == 0)
+            {
+                degrees = 0; // stop -0 from showing up.
+            }
+            if (degrees <= -180)
+            {
+                degrees = 180; // the other edge case
+            }
+            return (float)degrees;
         }
     }
 }
