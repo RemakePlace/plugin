@@ -423,7 +423,13 @@ namespace ReMakePlacePlugin
                 // check if it's already correctly placed & rotated
                 var locationError = houseItem.GetLocation() - localPosition;
                 houseItem.CorrectLocation = locationError.Length() < 0.00001;
-                houseItem.CorrectRotation = localRotation - houseItem.Rotate < 0.001;
+
+                // check for -180 and 180 - also 0
+                float absRotation = Math.Abs(localRotation) + Math.Abs(houseItem.Rotate);
+                houseItem.CorrectRotation = 
+                    Math.Abs(localRotation - houseItem.Rotate) < 0.001 ||
+                    Math.Abs(absRotation - 2 * Math.PI) < 0.001 ||
+                    absRotation < 0.001;
 
                 houseItem.ItemStruct = (IntPtr)gameObject.Item;
             }
