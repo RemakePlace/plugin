@@ -36,6 +36,7 @@
 
 	<ItemGroup>
 	  <PackageReference Include="DalamudPackager" Version="13.0.0" />
+	  <PackageReference Include="Lumina.Excel" Version="7.3.1" />
 	</ItemGroup>
 
 
