@@ -2,8 +2,6 @@
 using Dalamud.Interface.Textures;
 using Dalamud.Utility;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Bindings.ImGuizmo;
-using Dalamud.Bindings.ImPlot;
 using Lumina.Excel.Sheets;
 using ReMakePlacePlugin.Objects;
 using System;

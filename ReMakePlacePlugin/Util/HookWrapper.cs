@@ -1,7 +1,5 @@
 ﻿using System;
 using Dalamud.Hooking;
-using Dalamud.Logging;
-using Dalamud.Plugin;
 
 namespace ReMakePlacePlugin
 {
