@@ -207,7 +207,7 @@ namespace ReMakePlacePlugin
         {
             Quaternion q = Quaternion.CreateFromYawPitchRoll(0, 0, rotation);
 
-            return new List<float> { checkZero(q.X), checkZero(q.Y), checkZero(q.Z), checkZero(q.W) };
+            return new List<float> { (q.X), (q.Y), (q.Z), (q.W) };
         }
 
         static HousingItem ConvertToHousingItem(Furniture furniture)
