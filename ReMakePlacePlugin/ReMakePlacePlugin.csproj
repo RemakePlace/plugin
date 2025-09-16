@@ -62,5 +62,11 @@
 			<Private>false</Private>
 		</Reference>
 	</ItemGroup>
+	<ItemGroup>
+		<ContentWithTargetPath Include="Images\icon.png">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<TargetPath>Images\icon.png</TargetPath>
+		</ContentWithTargetPath>
+	</ItemGroup>
 
 </Project>

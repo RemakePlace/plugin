@@ -51,7 +51,7 @@ namespace ReMakePlacePlugin.Gui
         {   
             
             DalamudApi.Framework.RunOnTick(SafeMatch, TimeSpan.FromMilliseconds(100));
-            if (!ImGui.Begin(Plugin.Name, ref WindowVisible, ImGuiWindowFlags.NoScrollbar))
+            if (!ImGui.Begin(Plugin.Name, ref WindowVisible, ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse))
             {
                 return;
             }
@@ -64,8 +64,9 @@ namespace ReMakePlacePlugin.Gui
             ImGui.EndChild();ImGui.SameLine();
 
             ImGui.BeginChild("RightFloat", border: true);
-            ImGui.Text($"Current file location: "); ImGui.SameLine();
+            ImGui.Text($"Current file location:"); ImGui.SameLine();
             ImGui.Selectable((Config.SaveLocation.IsNullOrEmpty() ? "No File Selected" : Config.SaveLocation), false, ImGuiSelectableFlags.Disabled);
+            ImGui.Text("Note: Missing items, incorrect dyes, and items on unselected floors are grayed out");
             DrawItemListRegion();
             ImGui.EndChild();
             this.FileDialogManager.Draw();
@@ -76,7 +77,7 @@ namespace ReMakePlacePlugin.Gui
             ImGui.PushStyleColor(ImGuiCol.TitleBgActive, PURPLE);
             ImGui.PushStyleColor(ImGuiCol.ButtonHovered, PURPLE_ALPHA);
             ImGui.PushStyleColor(ImGuiCol.ButtonActive, PURPLE_ALPHA);
-            ImGui.SetNextWindowSize(new Vector2(530, 450), ImGuiCond.FirstUseEver);
+            ImGui.SetNextWindowSize(new Vector2(680, 550), ImGuiCond.FirstUseEver);
 
             DrawAllUi();
 
@@ -128,10 +129,7 @@ namespace ReMakePlacePlugin.Gui
 
         private void SaveLayoutToFile()
         {
-            if (!CheckModeForSave())
-            {
-                return;
-            }
+            if (!CheckModeForSave()) return;
 
             try
             {
@@ -146,18 +144,20 @@ namespace ReMakePlacePlugin.Gui
 
         private void LoadLayoutFromFile(bool ApplyLayout = false)
         {
-            try
-            {
-                SaveLayoutManager.ImportLayout(Config.SaveLocation);
-                Log(String.Format("Imported {0} items", Plugin.InteriorItemList.Count + Plugin.ExteriorItemList.Count));
+            if (!Config.SaveLocation.IsNullOrEmpty()){
+                try
+                {
+                    SaveLayoutManager.ImportLayout(Config.SaveLocation);
+                    Log(String.Format("Imported {0} items", Plugin.InteriorItemList.Count + Plugin.ExteriorItemList.Count));
 
-                if (CheckModeForLoad()) {Plugin.MatchLayout();}
-                Config.ResetRecord();
-                if (CheckModeForLoad() && ApplyLayout) {Plugin.ApplyLayout();}
-            }
-            catch (Exception e)
-            {
-                LogError($"Load Error: {e.Message}", e.StackTrace);
+                    if (CheckModeForLoad()) {Plugin.MatchLayout();}
+                    Config.ResetRecord();
+                    if (CheckModeForLoad() && ApplyLayout) {Plugin.ApplyLayout();}
+                }
+                catch (Exception e)
+                {
+                    LogError($"Load Error: {e.Message}", e.StackTrace);
+                }
             }
         }
 
@@ -248,8 +248,15 @@ namespace ReMakePlacePlugin.Gui
                 Utils.TeamcraftExport(allItemsList);
             },
             Config.SaveLocation.IsNullOrEmpty(),
-            "Generates a list import link for TeamCraft.",
+            "Generates a list import link for TeamCraft",
             ImGui.GetContentRegionAvail().X);
+            if (Config.SaveLocation.IsNullOrEmpty())
+            {
+                if (Config.ShowTooltips && ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+                {
+                    ImGui.SetTooltip("No active file to export");
+                }
+            }
 
             ImGui.Text("Placement Interval");
 
@@ -308,7 +315,7 @@ namespace ReMakePlacePlugin.Gui
                 }, 1, Path.GetDirectoryName(Config.SaveLocation));
             },
             false,
-            "Load layout from file",
+            "Select a file to open",
             menuDimensions.X);
 
             DrawMainMenuButton("Apply", () =>
@@ -338,7 +345,7 @@ namespace ReMakePlacePlugin.Gui
                 }
             },
             false,
-            "Save layout to file",
+            "Save layout to a new file location",
             menuDimensions.X);
 
             DrawMainMenuButton("Save",
@@ -535,13 +542,6 @@ namespace ReMakePlacePlugin.Gui
                 LoadLayoutFromFile();
             }
             
-
-            if (!isUnused)
-            {
-                ImGui.SameLine();
-                ImGui.Text("Note: Missing items, incorrect dyes, and items on unselected floors are grayed out");
-            }
-
             // name, position, r, color, set
             int columns = isUnused ? 4 : 5;
 
@@ -554,7 +554,7 @@ namespace ReMakePlacePlugin.Gui
                 }
 
                 // Stretch columns with relative weights
-                ImGui.TableSetupColumn("Item", ImGuiTableColumnFlags.WidthStretch, 2.0f);           // Wider
+                ImGui.TableSetupColumn("Item", ImGuiTableColumnFlags.WidthStretch, 1.8f);           // Wider
                 ImGui.TableSetupColumn("Position (X,Y,Z)", ImGuiTableColumnFlags.WidthStretch, 1.5f);
                 ImGui.TableSetupColumn("Rotation", ImGuiTableColumnFlags.WidthStretch, 0.5f);
                 ImGui.TableSetupColumn("Dye/Material", ImGuiTableColumnFlags.WidthStretch, 1.0f);
