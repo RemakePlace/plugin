@@ -58,7 +58,7 @@ Type `/remakeplace`,`/makeplace`, or `/rmp` to open the plugin screen. Most func
 
 ## FAQ
 ### Help! I can't get the plugin to work.
-Create a github issue or post on the [discord channel](https://discord.gg/xmpaMVR96b) for help with troubleshooting.
+Create a github issue or post on the [discord channel](https://discord.gg/f2VAqXKWUw) for help with troubleshooting.
 
 ### Does the plugin work if the game is not in English?
 Yes! Saving, loading, and transferring layouts will work in all languages.
