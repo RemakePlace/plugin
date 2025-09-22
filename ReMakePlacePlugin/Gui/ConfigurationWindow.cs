@@ -51,7 +51,7 @@ namespace ReMakePlacePlugin.Gui
                 return;
             }
 
-            Vector2 leftPanelSize = new Vector2(120 * ImGuiHelpers.GlobalScale, ImGui.GetWindowHeight());
+            Vector2 leftPanelSize = new Vector2(120 * ImGuiHelpers.GlobalScale, ImGui.GetWindowHeight()-30* ImGuiHelpers.GlobalScale);
 
             ImGui.BeginChild("LeftFloat", leftPanelSize);
             DrawMainMenu();
@@ -545,7 +545,7 @@ namespace ReMakePlacePlugin.Gui
             {
                 if (!isUnused)
                 {
-                    ImGui.TableSetupColumn("Set", ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoResize, 25f); // Fixed width: 50px
+                    ImGui.TableSetupColumn("Set", ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoResize, 25f* ImGuiHelpers.GlobalScale); // Making this fixed with can render it truncated and unreadable on higher scalings
                 }
 
                 // Stretch columns with relative weights
