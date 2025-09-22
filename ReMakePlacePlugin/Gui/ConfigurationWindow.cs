@@ -1,10 +1,8 @@
 ﻿using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.ImGuiFileDialog;
-using Dalamud.Interface.Textures;
-using Dalamud.Interface.Utility.Raii;
+using Dalamud.Interface.Utility;
 using Dalamud.Utility;
-using FFXIVClientStructs.FFXIV.Common.Lua;
 using Lumina.Excel.Sheets;
 using ReMakePlacePlugin.Objects;
 using System;
@@ -12,11 +10,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using static FFXIVClientStructs.FFXIV.Client.UI.Misc.GroupPoseModule;
 using static ReMakePlacePlugin.Gui.UiHelpers;
 using static ReMakePlacePlugin.ReMakePlacePlugin;
-using static System.Collections.Specialized.BitVector32;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace ReMakePlacePlugin.Gui
 {
@@ -56,7 +51,7 @@ namespace ReMakePlacePlugin.Gui
                 return;
             }
 
-            Vector2 leftPanelSize = new Vector2(120, ImGui.GetWindowHeight());
+            Vector2 leftPanelSize = new Vector2(120 * ImGuiHelpers.GlobalScale, ImGui.GetWindowHeight());
 
             ImGui.BeginChild("LeftFloat", leftPanelSize);
             DrawMainMenu();
