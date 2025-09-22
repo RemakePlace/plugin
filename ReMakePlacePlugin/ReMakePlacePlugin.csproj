@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Dalamud.NET.Sdk/13.0.0">
 
 	<PropertyGroup>
-		<PluginVersion>7.3.0</PluginVersion>
+		<PluginVersion>7.3.2</PluginVersion>
 		<TargetFramework>net9.0-windows</TargetFramework>
 		<LangVersion>latest</LangVersion>
 		<AssemblyTitle>ReMakePlacePlugin</AssemblyTitle>
@@ -61,6 +61,12 @@
 			<HintPath>$(DalamudLibPath)Lumina.Excel.dll</HintPath>
 			<Private>false</Private>
 		</Reference>
+	</ItemGroup>
+	<ItemGroup>
+		<ContentWithTargetPath Include="Images\icon.png">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<TargetPath>Images\icon.png</TargetPath>
+		</ContentWithTargetPath>
 	</ItemGroup>
 
 </Project>

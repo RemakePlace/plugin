@@ -1,7 +1,8 @@
-﻿using Dalamud.Interface.ImGuiFileDialog;
-using Dalamud.Interface.Textures;
+﻿using Dalamud.Bindings.ImGui;
+using Dalamud.Interface;
+using Dalamud.Interface.ImGuiFileDialog;
+using Dalamud.Interface.Utility;
 using Dalamud.Utility;
-using Dalamud.Bindings.ImGui;
 using Lumina.Excel.Sheets;
 using ReMakePlacePlugin.Objects;
 using System;
@@ -9,6 +10,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using static ReMakePlacePlugin.Gui.UiHelpers;
 using static ReMakePlacePlugin.ReMakePlacePlugin;
 
 namespace ReMakePlacePlugin.Gui
@@ -34,7 +36,7 @@ namespace ReMakePlacePlugin.Gui
             };
         }
 
-        private void SafeMatch(){ // I was told not to enabled saving or viewing designs outside of housing mode so this blocks the matching outside of housing mode.
+        private void SafeMatch(){
             if (Memory.Instance.IsHousingMode()){
                 Plugin.MatchLayout();
             }
@@ -44,59 +46,24 @@ namespace ReMakePlacePlugin.Gui
         {   
             
             DalamudApi.Framework.RunOnTick(SafeMatch, TimeSpan.FromMilliseconds(100));
-            if (!ImGui.Begin(Plugin.Name, ref WindowVisible, ImGuiWindowFlags.NoScrollWithMouse))
+            if (!ImGui.Begin(Plugin.Name, ref WindowVisible, ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse))
             {
                 return;
             }
-            if (ImGui.BeginChild("##SettingsRegion"))
-            {
-                DrawGeneralSettings();
-                if (ImGui.BeginChild("##ItemListRegion"))
-                {
-                    ImGui.PushStyleColor(ImGuiCol.Header, PURPLE_ALPHA);
-                    ImGui.PushStyleColor(ImGuiCol.HeaderHovered, PURPLE);
-                    ImGui.PushStyleColor(ImGuiCol.HeaderActive, PURPLE);
 
+            Vector2 leftPanelSize = new Vector2(120 * ImGuiHelpers.GlobalScale, ImGui.GetWindowHeight()-30* ImGuiHelpers.GlobalScale);
 
-                    if (ImGui.CollapsingHeader("Interior Furniture", ImGuiTreeNodeFlags.DefaultOpen))
-                    {
-                        ImGui.PushID("interior");
-                        DrawItemList(Plugin.InteriorItemList);
-                        ImGui.PopID();
-                    }
-                    if (ImGui.CollapsingHeader("Exterior Furniture", ImGuiTreeNodeFlags.DefaultOpen))
-                    {
-                        ImGui.PushID("exterior");
-                        DrawItemList(Plugin.ExteriorItemList);
-                        ImGui.PopID();
-                    }
+            ImGui.BeginChild("LeftFloat", leftPanelSize);
+            DrawMainMenu();
+            DrawGeneralSettings();
+            ImGui.EndChild();ImGui.SameLine();
 
-                    if (ImGui.CollapsingHeader("Interior Fixtures", ImGuiTreeNodeFlags.DefaultOpen))
-                    {
-                        ImGui.PushID("interiorFixture");
-                        DrawFixtureList(Plugin.Layout.interiorFixture);
-                        ImGui.PopID();
-                    }
-
-                    if (ImGui.CollapsingHeader("Exterior Fixtures", ImGuiTreeNodeFlags.DefaultOpen))
-                    {
-                        ImGui.PushID("exteriorFixture");
-                        DrawFixtureList(Plugin.Layout.exteriorFixture);
-                        ImGui.PopID();
-                    }
-                    if (ImGui.CollapsingHeader("Unused Furniture", ImGuiTreeNodeFlags.DefaultOpen))
-                    {
-                        ImGui.PushID("unused");
-                        DrawItemList(Plugin.UnusedItemList, true);
-                        ImGui.PopID();
-                    }
-
-                    ImGui.PopStyleColor(3);
-                    ImGui.EndChild();
-                }
-                ImGui.EndChild();
-            }
-
+            ImGui.BeginChild("RightFloat", border: true);
+            ImGui.Text($"Current file location:"); ImGui.SameLine();
+            ImGui.Selectable((Config.SaveLocation.IsNullOrEmpty() ? "No File Selected" : Config.SaveLocation), false, ImGuiSelectableFlags.Disabled);
+            ImGui.Text("Note: Missing items, incorrect dyes, and items on unselected floors are grayed out");
+            DrawItemListRegion();
+            ImGui.EndChild();
             this.FileDialogManager.Draw();
         }
 
@@ -105,24 +72,13 @@ namespace ReMakePlacePlugin.Gui
             ImGui.PushStyleColor(ImGuiCol.TitleBgActive, PURPLE);
             ImGui.PushStyleColor(ImGuiCol.ButtonHovered, PURPLE_ALPHA);
             ImGui.PushStyleColor(ImGuiCol.ButtonActive, PURPLE_ALPHA);
-            ImGui.SetNextWindowSize(new Vector2(530, 450), ImGuiCond.FirstUseEver);
+            ImGui.SetNextWindowSize(new Vector2(680, 550), ImGuiCond.FirstUseEver);
 
             DrawAllUi();
 
             ImGui.PopStyleColor(3);
             ImGui.End();
         }
-
-        #region Helper Functions
-        public void DrawIcon(ushort icon, Vector2 size)
-        {
-            if (icon < 65000)
-            {
-                var iconTexture = DalamudApi.TextureProvider.GetFromGameIcon(new GameIconLookup(icon));
-                ImGui.Image(iconTexture.GetWrapOrEmpty().Handle, size);
-            }
-        }
-        #endregion
 
 
         #region Basic UI
@@ -150,16 +106,16 @@ namespace ReMakePlacePlugin.Gui
 
         private bool CheckModeForLoad()
         {
-            if (Config.ApplyLayout && !Memory.Instance.CanEditItem())
+            if (!Memory.Instance.IsHousingMode())
             {
-                LogError("Unable to load and apply layouts outside of Rotate Layout mode");
+                //LogError("Unable to load layouts outside of Layout mode");
+                //LogLayoutMode();
                 return false;
             }
 
-            if (!Config.ApplyLayout && !Memory.Instance.IsHousingMode())
+            if (!Memory.Instance.CanEditItem())
             {
-                LogError("Unable to load layouts outside of Layout mode");
-                LogLayoutMode();
+                LogError("Unable to load and apply layouts outside of Rotate Layout mode");
                 return false;
             }
 
@@ -168,10 +124,7 @@ namespace ReMakePlacePlugin.Gui
 
         private void SaveLayoutToFile()
         {
-            if (!CheckModeForSave())
-            {
-                return;
-            }
+            if (!CheckModeForSave()) return;
 
             try
             {
@@ -184,255 +137,249 @@ namespace ReMakePlacePlugin.Gui
             }
         }
 
-        private void LoadLayoutFromFile()
+        private void LoadLayoutFromFile(bool ApplyLayout = false)
         {
-
-            if (!CheckModeForLoad()) return;
-
-            try
-            {
-                SaveLayoutManager.ImportLayout(Config.SaveLocation);
-                Log(String.Format("Imported {0} items", Plugin.InteriorItemList.Count + Plugin.ExteriorItemList.Count));
-
-                Plugin.MatchLayout();
-                Config.ResetRecord();
-
-                if (Config.ApplyLayout)
+            if (!Config.SaveLocation.IsNullOrEmpty()){
+                try
                 {
-                    Plugin.ApplyLayout();
-                }
+                    SaveLayoutManager.ImportLayout(Config.SaveLocation);
+                    Log(String.Format("Imported {0} items", Plugin.InteriorItemList.Count + Plugin.ExteriorItemList.Count));
 
-            }
-            catch (Exception e)
-            {
-                LogError($"Load Error: {e.Message}", e.StackTrace);
+                    if (CheckModeForLoad()) {Plugin.MatchLayout();}
+                    Config.ResetRecord();
+                    if (CheckModeForLoad() && ApplyLayout) {Plugin.ApplyLayout();}
+                }
+                catch (Exception e)
+                {
+                    LogError($"Load Error: {e.Message}", e.StackTrace);
+                }
             }
         }
 
+        private void DrawItemListRegion()
+        {
+            ImGui.BeginChild("ItemListRegion");
+            ImGui.PushStyleColor(ImGuiCol.Header, PURPLE_ALPHA);
+            ImGui.PushStyleColor(ImGuiCol.HeaderHovered, PURPLE);
+            ImGui.PushStyleColor(ImGuiCol.HeaderActive, PURPLE);
+
+            var furnitureSections = new List<(string label, List<HousingItem> items, List<Fixture> fixtures, bool unused)>
+                {
+                    ("Interior",Plugin.InteriorItemList, Plugin.Layout.interiorFixture, false),
+                    ("Exterior",Plugin.ExteriorItemList, Plugin.Layout.exteriorFixture, false),
+                    ("Unused", Plugin.UnusedItemList, new List<Fixture>{ }, true)
+                };
+
+            foreach (var section in furnitureSections)
+            {
+                ImGui.PushID(section.label);
+
+                if (ImGui.CollapsingHeader($"{section.label} Furniture", ImGuiTreeNodeFlags.DefaultOpen))
+                {
+                    if (section.unused) { DrawItemList(section.items, true); }
+                    else { DrawItemList(section.items); }
+                }
+
+                if (!section.unused)
+                {
+                    if (ImGui.CollapsingHeader($"{section.label} Fixture", ImGuiTreeNodeFlags.DefaultOpen))
+                    {
+                        DrawFixtureList(section.fixtures);
+                    }
+                }
+                ImGui.PopID();
+            }
+            ImGui.PopStyleColor(3);
+            ImGui.EndChild();
+        }
         unsafe private void DrawGeneralSettings()
         {
-
+            //ImGui.BeginChild("SettingsPanel", new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetFrameHeightWithSpacing() * 7));
             if (ImGui.Checkbox("Label Furniture", ref Config.DrawScreen)) Config.Save();
             if (Config.ShowTooltips && ImGui.IsItemHovered())
                 ImGui.SetTooltip("Show furniture names on the screen");
 
-            ImGui.SameLine();
-            ImGui.Dummy(new Vector2(10, 0));
-            ImGui.SameLine();
-            if (ImGui.Checkbox("##hideTooltipsOnOff", ref Config.ShowTooltips)) Config.Save();
-            ImGui.SameLine();
-            ImGui.TextUnformatted("Show Tooltips");
+            //ImGui.SameLine();ImGui.Dummy(new Vector2(10, 0));ImGui.SameLine();
 
-            ImGui.Dummy(new Vector2(0, 10));
+            if (ImGui.Checkbox("Show Tooltips", ref Config.ShowTooltips)) Config.Save();
 
-
-            ImGui.Text("Layout");
-
-            if (!Config.SaveLocation.IsNullOrEmpty())
+            bool hasFloors = false;
+            try
             {
-                ImGui.Text($"Current file location: {Config.SaveLocation}");
-
-                if (ImGui.Button("Save"))
-                {
-                    SaveLayoutToFile();
-                }
-                if (Config.ShowTooltips && ImGui.IsItemHovered()) ImGui.SetTooltip("Save layout to current file location");
-                ImGui.SameLine();
-
+                hasFloors = Memory.Instance.GetCurrentTerritory() == Memory.HousingArea.Indoors && !Memory.Instance.GetIndoorHouseSize().Equals("Apartment");
+            }
+            catch (NullReferenceException)
+            {
+                // Thanks zbee
             }
 
-            if (ImGui.Button("Save As"))
+            DrawMainMenuButton($"Teamcraft Export", () =>
             {
-                if (CheckModeForSave())
+                var allItemsList = new Dictionary<string, int>();
+                for (int i = 0; i < Plugin.InteriorItemList.Count(); i++)
                 {
-                    string saveName = "save";
-                    if (!Config.SaveLocation.IsNullOrEmpty()) saveName = Path.GetFileNameWithoutExtension(Config.SaveLocation);
-
-                    FileDialogManager.SaveFileDialog("Select a Save Location", ".json", saveName, "json", (bool ok, string res) =>
+                    var itemId = Plugin.InteriorItemList[i].ItemKey.ToString();
+                    if (allItemsList.ContainsKey(itemId))
                     {
-                        if (!ok)
-                        {
-                            return;
-                        }
-
-                        Config.SaveLocation = res;
-                        Config.Save();
-                        SaveLayoutToFile();
-
-                    }, Path.GetDirectoryName(Config.SaveLocation));
-                }
-            }
-            if (Config.ShowTooltips && ImGui.IsItemHovered()) ImGui.SetTooltip("Save layout to file");
-
-            ImGui.SameLine(); ImGui.Dummy(new Vector2(20, 0)); ImGui.SameLine();
-
-            if (!Config.SaveLocation.IsNullOrEmpty())
-            {
-                if (ImGui.Button("Load"))
-                {
-                    Config.Save();
-                    LoadLayoutFromFile();
-                }
-                if (Config.ShowTooltips && ImGui.IsItemHovered()) ImGui.SetTooltip("Load layout from current file location");
-                ImGui.SameLine();
-            }
-
-            if (ImGui.Button("Load From"))
-            {
-                if (CheckModeForLoad())
-                {
-                    string saveName = "save";
-                    if (!Config.SaveLocation.IsNullOrEmpty()) saveName = Path.GetFileNameWithoutExtension(Config.SaveLocation);
-
-                    FileDialogManager.OpenFileDialog("Select a Layout File", ".json", (bool ok, List<string> res) =>
+                        allItemsList[itemId]++;
+                    }
+                    else
                     {
-                        if (!ok)
-                        {
-                            return;
-                        }
-
-                        Config.SaveLocation = res.FirstOrDefault("");
-                        Config.Save();
-
-                        LoadLayoutFromFile();
-
-                    }, 1, Path.GetDirectoryName(Config.SaveLocation));
+                        allItemsList.Add(itemId, 1);
+                    }
+                }
+                for (int i = 0; i < Plugin.ExteriorItemList.Count(); i++)
+                {
+                    var itemId = Plugin.ExteriorItemList[i].ItemKey.ToString();
+                    if (allItemsList.ContainsKey(itemId))
+                    {
+                        allItemsList[itemId]++;
+                    }
+                    else
+                    {
+                        allItemsList.Add(itemId, 1);
+                    }
+                }
+                Utils.TeamcraftExport(allItemsList);
+            },
+            Config.SaveLocation.IsNullOrEmpty(),
+            "Generates a list import link for TeamCraft",
+            ImGui.GetContentRegionAvail().X);
+            if (Config.SaveLocation.IsNullOrEmpty())
+            {
+                if (Config.ShowTooltips && ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+                {
+                    ImGui.SetTooltip("No active file to export");
                 }
             }
-            if (Config.ShowTooltips && ImGui.IsItemHovered()) ImGui.SetTooltip("Load layout from file");
 
-            ImGui.SameLine(); ImGui.Dummy(new Vector2(10, 0)); ImGui.SameLine();
+            ImGui.Text("Placement Interval");
 
-            if (ImGui.Checkbox("Apply Layout", ref Config.ApplyLayout))
-            {
-                Config.Save();
-            }
-
-            ImGui.SameLine(); ImGui.Dummy(new Vector2(10, 0)); ImGui.SameLine();
-
-            ImGui.PushItemWidth(100);
-            if (ImGui.InputInt("Placement Interval (ms)", ref Config.LoadInterval))
+            ImGui.Dummy(new Vector2(5,0)); ImGui.SameLine();
+            ImGui.PushItemWidth(60);
+            if (ImGui.InputInt("ms", ref Config.LoadInterval))
             {
                 Config.Save();
             }
             ImGui.PopItemWidth();
             if (Config.ShowTooltips && ImGui.IsItemHovered()) ImGui.SetTooltip("Time interval between furniture placements when applying a layout. If this is too low (e.g. 200 ms), some placements may be skipped over.");
 
-            if (ImGui.Button("Export to Teamcraft"))
-            {
-                var allItemsList = new Dictionary<string,int>();
-                for (int i = 0; i < Plugin.InteriorItemList.Count();i++) {
-                    var itemId = Plugin.InteriorItemList[i].ItemKey.ToString();
-                    if (allItemsList.ContainsKey(itemId)) {
-                        allItemsList[itemId]++;
-                    } else {
-                        allItemsList.Add(itemId, 1);
-                    }
-                }
-                for (int i = 0; i < Plugin.ExteriorItemList.Count();i++) {
-                    var itemId = Plugin.ExteriorItemList[i].ItemKey.ToString();
-                    if (allItemsList.ContainsKey(itemId)) {
-                        allItemsList[itemId]++;
-                    } else {
-                        allItemsList.Add(itemId, 1);
-                    }
-                }
-                Utils.TeamcraftExport(allItemsList);
-            }
-            if (Config.ShowTooltips && ImGui.IsItemHovered()) ImGui.SetTooltip("Generates a list import link for TeamCraft.");
-
-            ImGui.Dummy(new Vector2(0, 15));
-
-            bool hasFloors = false;
-            try {
-                hasFloors = Memory.Instance.GetCurrentTerritory() == Memory.HousingArea.Indoors && !Memory.Instance.GetIndoorHouseSize().Equals("Apartment");
-            } catch (NullReferenceException){
-                // Thanks zbee
-            }
+            ImGui.Dummy(new Vector2(10, 0));
 
             if (hasFloors)
             {
+                ImGui.Text("Enabled Floors");
+                float height = ImGui.GetFrameHeightWithSpacing() * 3 + ImGui.GetStyle().WindowPadding.Y;
+                float width = 120;
+                ImGui.BeginChild("FloorSelection", new Vector2(width, height), true, ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
+                //if (ImGui.CollapsingHeader("Enabled Floors")){
+                    if (Memory.Instance.HasUpperFloor() && ImGui.Checkbox("Upper Floor", ref Config.UpperFloor)) Config.Save();
+                    if (ImGui.Checkbox("Ground Floor", ref Config.GroundFloor)) Config.Save();
+                    if (ImGui.Checkbox("Basement", ref Config.Basement)) Config.Save();
+                //}
+                ImGui.EndChild();
+            }
+            //ImGui.EndChild();
+        }
 
-                ImGui.Text("Selected Floors");
+        unsafe private void DrawMainMenu()
+        {
+            Vector2 menuDimensions = new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetContentRegionAvail().X + ImGui.GetFrameHeightWithSpacing() * 4);
+            ImGui.BeginChild("MainMenu", menuDimensions,flags: ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
 
-                if (ImGui.Checkbox("Basement", ref Config.Basement))
-                {
-                    Config.Save();
-                }
-                ImGui.SameLine(); ImGui.Dummy(new Vector2(10, 0)); ImGui.SameLine();
-
-                if (ImGui.Checkbox("Ground Floor", ref Config.GroundFloor))
-                {
-                    Config.Save();
-                }
-                ImGui.SameLine(); ImGui.Dummy(new Vector2(10, 0)); ImGui.SameLine();
-
-                if (Memory.Instance.HasUpperFloor() && ImGui.Checkbox("Upper Floor", ref Config.UpperFloor))
-                {
-                    Config.Save();
-                }
-
-                ImGui.Dummy(new Vector2(0, 15));
-
+            string pluginDir = DalamudApi.PluginInterface.AssemblyLocation.DirectoryName!;
+            var imagePath = Path.Combine(pluginDir, "images/icon.png");
+            var image = DalamudApi.TextureProvider.GetFromFile(imagePath).GetWrapOrDefault();
+            if (image != null)
+            {
+                ImGui.Image(image.Handle, new Vector2(menuDimensions.X, menuDimensions.X));
             }
 
-            ImGui.Dummy(new Vector2(0, 15));
+            DrawMainMenuButton($"Open File", () =>
+            {
+                string saveName = Config.SaveLocation.IsNullOrEmpty()
+                    ? "save"
+                    : Path.GetFileNameWithoutExtension(Config.SaveLocation);
 
+                FileDialogManager.OpenFileDialog("Select a Layout File", ".json", (ok, res) =>
+                {
+                    if (!ok) return;
+                    Config.SaveLocation = res.FirstOrDefault("");
+                    Config.Save();
+                    LoadLayoutFromFile();
+                }, 1, Path.GetDirectoryName(Config.SaveLocation));
+            },
+            false,
+            "Select a file to open",
+            menuDimensions.X);
+
+            DrawMainMenuButton("Apply", () =>
+            {
+                Config.Save();
+                LoadLayoutFromFile(true);
+            }, 
+            Config.SaveLocation.IsNullOrEmpty(),
+            "Attempt to apply layout from current file location",
+            menuDimensions.X);
+
+            DrawMainMenuButton("Save As", () =>
+            {
+                if (CheckModeForSave())
+                {
+                    string saveName = Config.SaveLocation.IsNullOrEmpty()
+                        ? "save"
+                        : Path.GetFileNameWithoutExtension(Config.SaveLocation);
+
+                    FileDialogManager.SaveFileDialog("Select a Save Location", ".json", saveName, "json", (ok, res) =>
+                    {
+                        if (!ok) return;
+                        Config.SaveLocation = res;
+                        Config.Save();
+                        SaveLayoutToFile();
+                    }, Path.GetDirectoryName(Config.SaveLocation));
+                }
+            },
+            false,
+            "Save layout to a new file location",
+            menuDimensions.X);
+
+            DrawMainMenuButton("Save",
+                SaveLayoutToFile, 
+                Config.SaveLocation.IsNullOrEmpty(),
+                "Save layout to current file location",
+                menuDimensions.X);
+
+            ImGui.EndChild();
         }
+
+        private void DrawMainMenuButton(string label, System.Action onClick, bool disabled = false, string? tooltip = null, float width = 100)
+        {
+            float height = ImGui.GetFrameHeight();
+
+
+            ImGui.BeginDisabled(disabled);
+            if (ImGui.Button(label, new Vector2(width, height)) && !disabled)
+                onClick();
+
+            if (!string.IsNullOrEmpty(tooltip) && ImGui.IsItemHovered())
+                ImGui.SetTooltip(tooltip);
+
+            ImGui.EndDisabled();
+        }
+
 
         private void DrawRow(int i, HousingItem housingItem, bool showSetPosition = true, int childIndex = -1)
         {
-            if (!housingItem.CorrectLocation) ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.5f, 0.5f, 0.5f, 1));
-            ImGui.Text($"{housingItem.X:N4}, {housingItem.Y:N4}, {housingItem.Z:N4}");
-            if (!housingItem.CorrectLocation) ImGui.PopStyleColor();
-
-
-            ImGui.NextColumn();
-
-            if (!housingItem.CorrectRotation) ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.5f, 0.5f, 0.5f, 1));
-            ImGui.Text($"{Utils.radToDeg(housingItem.Rotate):N3}"); ImGui.NextColumn();
-            if (!housingItem.CorrectRotation) ImGui.PopStyleColor();
-
-            var stain = DalamudApi.DataManager.GetExcelSheet<Stain>().GetRowOrDefault(housingItem.Stain);
-            var colorName = stain?.Name;
-
-            if (housingItem.Stain != 0)
-            {
-                Utils.StainButton("dye_" + i, stain.Value, new Vector2(20));
-                ImGui.SameLine();
-
-                if (!housingItem.DyeMatch) ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.5f, 0.5f, 0.5f, 1));
-
-                ImGui.Text($"{colorName}");
-
-                if (!housingItem.DyeMatch) ImGui.PopStyleColor();
-
-            }
-            else if (housingItem.MaterialItemKey != 0)
-            {
-
-                if (DalamudApi.DataManager.GetExcelSheet<Item>().TryGetRow(housingItem.MaterialItemKey, out var item))
-                {
-                    if (!housingItem.DyeMatch) ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.5f, 0.5f, 0.5f, 1));
-
-                    DrawIcon(item.Icon, new Vector2(20, 20));
-                    ImGui.SameLine();
-                    ImGui.Text(item.Name.ToString());
-
-                    if (!housingItem.DyeMatch) ImGui.PopStyleColor();
-                }
-
-            }
-            ImGui.NextColumn();
-
+            ImGui.TableNextColumn();
             if (showSetPosition)
             {
                 string uniqueID = childIndex == -1 ? i.ToString() : i.ToString() + "_" + childIndex.ToString();
-
                 bool noMatch = housingItem.ItemStruct == IntPtr.Zero;
 
                 if (!noMatch)
                 {
+                    ImGui.PushStyleVar(ImGuiStyleVar.CellPadding, new Vector2(0.0f, 0.0f));
+                    ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.5f, 0.5f));
                     if (ImGui.Button("Set" + "##" + uniqueID))
                     {
                         Plugin.MatchLayout();
@@ -446,12 +393,68 @@ namespace ReMakePlacePlugin.Gui
                             LogError($"Unable to set position for {housingItem.Name}");
                         }
                     }
+                    ImGui.PopStyleVar(2);
                 }
-
-                ImGui.NextColumn();
+                ImGui.TableNextColumn();
             }
 
+            var displayName = housingItem.Name;
 
+            if (DalamudApi.DataManager.GetExcelSheet<Item>().TryGetRow(housingItem.ItemKey, out var item))
+            {
+                DrawIcon(item.Icon, new Vector2(20, 20));
+                ImGui.SameLine();
+            }
+
+            if (housingItem.ItemStruct == IntPtr.Zero)
+            {
+                ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.5f, 0.5f, 0.5f, 1));
+            }
+            ImGui.Text(displayName);
+            if (ImGui.IsItemClicked()) ImGui.SetClipboardText(displayName);
+            ImGui.TableNextColumn();
+
+            if (!housingItem.CorrectLocation) ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.5f, 0.5f, 0.5f, 1));
+            string posText = $"{housingItem.X:0.0###}, {housingItem.Y:0.0###}, {housingItem.Z:0.0###}";
+            float posX = (ImGui.GetCursorPosX() + ImGui.GetColumnWidth() - ImGui.CalcTextSize(posText).X - ImGui.GetScrollX());
+            if (posX > ImGui.GetCursorPosX())
+                ImGui.SetCursorPosX(posX);
+            ImGui.Text(posText);
+            if (!housingItem.CorrectLocation) ImGui.PopStyleColor();
+            ImGui.TableNextColumn();
+
+            if (!housingItem.CorrectRotation) ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.5f, 0.5f, 0.5f, 1));
+            string rotateText = $"{Utils.radToDeg(housingItem.Rotate):0.00##}";
+            posX = (ImGui.GetCursorPosX() + ImGui.GetColumnWidth() - ImGui.CalcTextSize(rotateText).X - ImGui.GetScrollX());
+            if (posX > ImGui.GetCursorPosX())
+                ImGui.SetCursorPosX(posX);
+            ImGui.Text(rotateText);
+            if (!housingItem.CorrectRotation) ImGui.PopStyleColor();
+            ImGui.TableNextColumn();
+
+            var stain = DalamudApi.DataManager.GetExcelSheet<Stain>().GetRowOrDefault(housingItem.Stain);
+            var colorName = stain?.Name;
+
+            if (housingItem.Stain != 0)
+            {
+                Utils.StainButton("dye_" + i, stain.Value, new Vector2(20));
+                ImGui.SameLine();
+
+                if (!housingItem.DyeMatch) ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.5f, 0.5f, 0.5f, 1));
+                ImGui.Text($"{colorName}");
+                if (!housingItem.DyeMatch) ImGui.PopStyleColor();
+            }
+            else if (housingItem.MaterialItemKey != 0)
+            {
+                if (DalamudApi.DataManager.GetExcelSheet<Item>().TryGetRow(housingItem.MaterialItemKey, out var mitem))
+                {
+                    if (!housingItem.DyeMatch) ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.5f, 0.5f, 0.5f, 1));
+                    DrawIcon(mitem.Icon, new Vector2(20, 20));
+                    ImGui.SameLine();
+                    ImGui.Text(mitem.Name.ToString());
+                    if (!housingItem.DyeMatch) ImGui.PopStyleColor();
+                }
+            }
         }
 
         private void DrawFixtureList(List<Fixture> fixtureList)
@@ -464,32 +467,33 @@ namespace ReMakePlacePlugin.Gui
                     Config.Save();
                 }
 
-                ImGui.Columns(3, "FixtureList", true);
-                ImGui.Separator();
-
-                ImGui.Text("Level"); ImGui.NextColumn();
-                ImGui.Text("Fixture"); ImGui.NextColumn();
-                ImGui.Text("Item"); ImGui.NextColumn();
-
-                ImGui.Separator();
-
-                foreach (var fixture in fixtureList)
+                if (ImGui.BeginTable("FixtureList", 3, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg))
                 {
-                    ImGui.Text(fixture.level); ImGui.NextColumn();
-                    ImGui.Text(fixture.type); ImGui.NextColumn();
+                    ImGui.TableSetupColumn("Level", ImGuiTableColumnFlags.None, 2);
+                    ImGui.TableSetupColumn("Fixture", ImGuiTableColumnFlags.None, 1);
+                    ImGui.TableSetupColumn("Item", ImGuiTableColumnFlags.None, 5);
+                    ImGui.TableHeadersRow();
 
-                    if (DalamudApi.DataManager.GetExcelSheet<Item>().TryGetRow(fixture.itemId, out var item))
+                    foreach (var fixture in fixtureList)
                     {
-                        DrawIcon(item.Icon, new Vector2(20, 20));
-                        ImGui.SameLine();
+                        ImGui.TableNextRow();
+                        ImGui.TableNextColumn();
+                        ImGui.Text(fixture.level);
+
+                        ImGui.TableNextColumn();
+                        ImGui.Text(fixture.type);
+
+                        ImGui.TableNextColumn();
+                        if (DalamudApi.DataManager.GetExcelSheet<Item>().TryGetRow(fixture.itemId, out var item))
+                        {
+                            DrawIcon(item.Icon, new Vector2(20, 20));
+                            ImGui.SameLine();
+                        }
+                        ImGui.Text(fixture.name);
                     }
-                    ImGui.Text(fixture.name); ImGui.NextColumn();
 
-                    ImGui.Separator();
+                    ImGui.EndTable();
                 }
-
-                ImGui.Columns(1);
-
             }
             catch (Exception e)
             {
@@ -527,62 +531,47 @@ namespace ReMakePlacePlugin.Gui
                 itemList.Clear();
                 Config.Save();
             }
-
-            if (!isUnused)
+            ImGui.SameLine();
+            if (IconTextButton(FontAwesomeIcon.SyncAlt,"Refresh"))
             {
-                ImGui.SameLine();
-                ImGui.Text("Note: Missing items, incorrect dyes, and items on unselected floors are grayed out");
+                LoadLayoutFromFile();
             }
-
+            
             // name, position, r, color, set
             int columns = isUnused ? 4 : 5;
 
 
-            ImGui.Columns(columns, "ItemList", true);
-            ImGui.Separator();
-            ImGui.Text("Item"); ImGui.NextColumn();
-            ImGui.Text("Position (X,Y,Z)"); ImGui.NextColumn();
-            ImGui.Text("Rotation"); ImGui.NextColumn();
-            ImGui.Text("Dye/Material"); ImGui.NextColumn();
-
-            if (!isUnused)
+            if (ImGui.BeginTable("ItemList", columns, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.Resizable | ImGuiTableFlags.SizingStretchProp | ImGuiTableFlags.Reorderable))
             {
-                ImGui.Text("Set Position"); ImGui.NextColumn();
+                if (!isUnused)
+                {
+                    ImGui.TableSetupColumn("Set", ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoResize, 25f* ImGuiHelpers.GlobalScale); // Making this fixed with can render it truncated and unreadable on higher scalings
+                }
+
+                // Stretch columns with relative weights
+                ImGui.TableSetupColumn("Item", ImGuiTableColumnFlags.WidthStretch, 1.8f);           // Wider
+                ImGui.TableSetupColumn("Position (X,Y,Z)", ImGuiTableColumnFlags.WidthStretch, 1.5f);
+                ImGui.TableSetupColumn("Rotation", ImGuiTableColumnFlags.WidthStretch, 0.5f);
+                ImGui.TableSetupColumn("Dye/Material", ImGuiTableColumnFlags.WidthStretch, 1.0f);
+
+                ImGui.TableHeadersRow();
+
+
+                for (int i = 0; i < itemList.Count(); i++)
+                {
+                    var housingItem = itemList[i];
+
+                    ImGui.TableNextRow();
+                    DrawRow(i, housingItem, !isUnused);
+                    if (housingItem.ItemStruct == IntPtr.Zero)
+                    {
+                        ImGui.PopStyleColor();
+                    }
+
+                }
+
+                ImGui.EndTable();
             }
-
-            ImGui.Separator();
-            for (int i = 0; i < itemList.Count(); i++)
-            {
-                var housingItem = itemList[i];
-                var displayName = housingItem.Name;
-
-                if (DalamudApi.DataManager.GetExcelSheet<Item>().TryGetRow(housingItem.ItemKey, out var item))
-                {
-                    DrawIcon(item.Icon, new Vector2(20, 20));
-                    ImGui.SameLine();
-                }
-
-                if (housingItem.ItemStruct == IntPtr.Zero)
-                {
-                    ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.5f, 0.5f, 0.5f, 1));
-                }
-
-                ImGui.Text(displayName);
-
-
-
-                ImGui.NextColumn();
-                 // Make sure we don't try and draw a row for a housing item that doesn't exist. If it does get passed it corrupts all ImGui interfaces managed by dalamud.
-                DrawRow(i, housingItem, !isUnused);
-                if (housingItem.ItemStruct == IntPtr.Zero)
-                {
-                    ImGui.PopStyleColor();
-                }
-
-                ImGui.Separator();
-            }
-
-            ImGui.Columns(1);
 
         }
 
@@ -649,7 +638,6 @@ namespace ReMakePlacePlugin.Gui
                         }
 
                         ImGui.SameLine();
-
                         ImGui.End();
                     }
 
@@ -658,10 +646,5 @@ namespace ReMakePlacePlugin.Gui
             }
         }
         #endregion
-
-
-
-
-
     }
 }

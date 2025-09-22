@@ -19,8 +19,7 @@ namespace ReMakePlacePlugin
         public bool GroundFloor = true;
         public bool UpperFloor = true;
 
-        public int LoadInterval = 400;
-        public bool ApplyLayout = true;
+        public int LoadInterval = 500;
 
         public string SaveLocation = null;
 

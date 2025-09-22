@@ -16,7 +16,7 @@ namespace ReMakePlacePlugin
 
     public class ReMakePlacePlugin : IDalamudPlugin
     {
-        public string Name => $"ReMakePlace Plugin v7.3.0";
+        public string Name => $"ReMakePlace Plugin v7.3.2";
 
         private string[] commandNames = ["remakeplace", "rmp", "makeplace"];
         public PluginUi Gui { get; private set; }
@@ -84,7 +84,7 @@ namespace ReMakePlacePlugin
             Memory.Init();
             LayoutManager = new SaveLayoutManager(this, Config);
 
-            DalamudApi.PluginLog.Info("ReMakePlace Plugin v7.3.0 initialized");
+            DalamudApi.PluginLog.Info("ReMakePlace Plugin v7.3.2 initialized");
         }
         public void Initialize()
         {
