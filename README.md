@@ -1,6 +1,6 @@
 # ReMakePlace Plugin
 
-A plugin to automatically save and load housing furniture layouts for FFXIV. It can also import/export layouts from the Original [MakePlace](https://jawslouis.itch.io/makeplace) program and plugin as well as the Newer [ReMakePlace](https://github.com/RemakePlace/app).
+A plugin to automatically save and load housing furniture layouts for FFXIV. It can also import/export layouts from the original MakePlace program and plugin as well as the Newer [ReMakePlace](https://github.com/RemakePlace/app).
 
 ## Contents
 * [Installation](#installation)
