@@ -1,13 +1,14 @@
 ﻿using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.MJI;
 using Lumina.Excel.Sheets;
-using Microsoft.VisualBasic;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.InteropServices;
-
+using Lumina.Extensions;
+using ReMakePlacePlugin.Objects;
 using static ReMakePlacePlugin.ReMakePlacePlugin;
+using HousingFurniture = Lumina.Excel.Sheets.HousingFurniture;
 
 namespace ReMakePlacePlugin
 {
@@ -107,6 +108,68 @@ namespace ReMakePlacePlugin
             if (!GetActiveLayout(out var manager)) return 0f;
             if (!manager.IndoorAreaData.HasValue) return 0f;
             return manager.IndoorAreaData.Value.LightLevel;
+        }
+
+        public void PrintPointers()
+        {
+            Log("Layout World " + LayoutWorldPtr.ToString("X"));
+            Log("Housing Module " + HousingModulePtr.ToString("X"));
+        }
+
+        public void SetInteriorFurniture(HousingItem[] furniture)
+        {
+            try
+            {
+                var man = HousingManager.Instance();
+                if (man->IsOutside()) return;
+                
+                var furnList = man->IndoorTerritory->FurnitureManager.FurnitureVector;
+                var objMan = man->IndoorTerritory->FurnitureManager.ObjectManager;
+                
+                int i = 0;
+                foreach (var furn in furnList)
+                {
+                    var index = furn.Value->Index;
+                    var obj = objMan.ObjectArray.Objects[index].Value;
+                    var rmpObj = (HousingGameObject*)obj;
+                    
+                    if (i < furniture.Length)
+                    {
+                        var newItem = furniture[i];
+                        i++;
+
+                        var row = DalamudApi.DataManager.GetExcelSheet<HousingFurniture>().FirstOrNull(x => x.Item.RowId == newItem.ItemKey);
+                        if (row == null) continue;
+                        
+                        var materialRow = DalamudApi.DataManager.GetExcelSheet<VaseFlower>().FirstOrNull(x => x.Item.RowId == newItem.MaterialItemKey);
+                        if (materialRow != null)
+                        {
+                            rmpObj->Item->MaterialManager->MaterialSlot1 = materialRow.Value.Unknown0;
+                        }
+                    
+                        var newId = row.Value.RowId;
+                        rmpObj->housingRowId = newId;
+                        rmpObj->housingRowId2 = newId;
+                        rmpObj->X = newItem.X;
+                        rmpObj->Y = newItem.Y;
+                        rmpObj->Z = newItem.Z;
+                        rmpObj->color = newItem.Stain;
+                        obj->Rotation = newItem.Rotate;
+                    }
+                    else
+                    {
+                        rmpObj->housingRowId = 0;
+                        rmpObj->housingRowId2 = 0;
+                    }
+                    
+                    obj->DisableDraw();
+                }
+            }
+            catch (Exception e)
+            {
+                LogError("Error fucking with memory.");
+                DalamudApi.PluginLog.Error(e.ToString());
+            }
         }
 
         public CommonFixture[] GetInteriorCommonFixtures(int floorId)

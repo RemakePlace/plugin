@@ -252,6 +252,21 @@ namespace ReMakePlacePlugin.Gui
                     ImGui.SetTooltip("No active file to export");
                 }
             }
+            
+            DrawMainMenuButton($"Preview Layout", () =>
+            {
+                Memory.Instance.SetInteriorFurniture(Plugin.InteriorItemList.ToArray());
+            }, 
+                Config.SaveLocation.IsNullOrEmpty(), 
+                "Previews the currently opened file.",
+                ImGui.GetContentRegionAvail().X);
+            if (Config.SaveLocation.IsNullOrEmpty())
+            {
+                if (Config.ShowTooltips && ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+                {
+                    ImGui.SetTooltip("No active file to preview");
+                }
+            }
 
             ImGui.Text("Placement Interval");
 
