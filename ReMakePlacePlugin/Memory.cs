@@ -112,32 +112,50 @@ namespace ReMakePlacePlugin
 
         public void PrintPointers()
         {
-            Log("Layout World " + LayoutWorldPtr.ToString("X"));
-            Log("Housing Module " + HousingModulePtr.ToString("X"));
+            DalamudApi.PluginLog.Debug("Layout World " + LayoutWorldPtr.ToString("X"));
+            DalamudApi.PluginLog.Debug("Housing Module " + HousingModulePtr.ToString("X"));
         }
 
         public void SetInteriorFurniture(HousingItem[] furniture)
         {
             try
             {
-                var man = HousingManager.Instance();
-                if (man->IsOutside()) return;
+                var hMan = HousingManager.Instance();
+                if (hMan->IsOutside()) return;
                 
-                var furnList = man->IndoorTerritory->FurnitureManager.FurnitureVector;
-                var objMan = man->IndoorTerritory->FurnitureManager.ObjectManager;
+                var furnList = hMan->IndoorTerritory->FurnitureManager.FurnitureVector;
+                var objMan = hMan->IndoorTerritory->FurnitureManager.ObjectManager;
+                objMan.ObjectArray.ObjectCount += 1;
+                
+                DalamudApi.PluginLog.Debug("Preview List length: "+furniture.Length.ToString());
+                DalamudApi.PluginLog.Debug("Real List length: " + furnList.Count.ToString());
+
+                if (true || furniture.Length > furnList.Count)
+                {
+                    //DalamudApi.PluginLog.Debug("Real furniture list has fewer items.\nMaking more...");
+
+                    var dummyItemIndex = furnList.Count + 1;
+                    
+
+                    
+                }
+
                 
                 int i = 0;
                 foreach (var furn in furnList)
                 {
                     var index = furn.Value->Index;
+                    
+                    DalamudApi.PluginLog.Debug($"a: {index}");
                     var obj = objMan.ObjectArray.Objects[index].Value;
                     var rmpObj = (HousingGameObject*)obj;
-                    
+                    DalamudApi.PluginLog.Debug($"b: {2}");
                     if (i < furniture.Length)
                     {
                         var newItem = furniture[i];
                         i++;
 
+                        DalamudApi.PluginLog.Debug($"item key: {newItem.ItemKey}");
                         var row = DalamudApi.DataManager.GetExcelSheet<HousingFurniture>().FirstOrNull(x => x.Item.RowId == newItem.ItemKey);
                         if (row == null) continue;
                         
@@ -161,7 +179,7 @@ namespace ReMakePlacePlugin
                         rmpObj->housingRowId = 0;
                         rmpObj->housingRowId2 = 0;
                     }
-                    
+                    DalamudApi.PluginLog.Debug($"c: {4}");
                     obj->DisableDraw();
                 }
             }
