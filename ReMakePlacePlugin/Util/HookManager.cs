@@ -7,7 +7,7 @@ namespace ReMakePlacePlugin
     public class HookManager
     {
         public static List<IHookWrapper> HookList = new();
-        
+
 
         public static void Dispose()
         {
@@ -22,8 +22,7 @@ namespace ReMakePlacePlugin
 
         }
 
-        public static HookWrapper<T> Hook<T>(string signature, T detour, bool enable = true, int addressOffset = 0)
-    where T : Delegate
+        public static HookWrapper<T> Hook<T>(string signature, T detour, bool enable = true, int addressOffset = 0) where T : Delegate
         {
             var addr = DalamudApi.SigScanner.ScanText(signature);
 

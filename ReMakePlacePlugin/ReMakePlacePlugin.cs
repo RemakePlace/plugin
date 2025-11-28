@@ -1,6 +1,11 @@
-﻿using Dalamud.Game.Command;
+﻿using Dalamud.Game.Addon.Lifecycle;
+using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
+using Dalamud.Game.Command;
 using Dalamud.Plugin;
+using ECommons;
+using ECommons.Automation;
 using FFXIVClientStructs.FFXIV.Client.Game;
+using FFXIVClientStructs.FFXIV.Component.GUI;
 using Lumina.Excel.Sheets;
 using ReMakePlacePlugin.Objects;
 using ReMakePlacePlugin.Util;
@@ -8,8 +13,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using static ReMakePlacePlugin.Memory;
 using HousingFurniture = Lumina.Excel.Sheets.HousingFurniture;
+using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
 
 namespace ReMakePlacePlugin
 {
@@ -26,7 +33,6 @@ namespace ReMakePlacePlugin
 
         private delegate bool UpdateLayoutDelegate(IntPtr a1);
         private HookWrapper<UpdateLayoutDelegate> IsSaveLayoutHook;
-
 
         // Function for selecting an item, usually used when clicking on one in game.        
         public delegate void SelectItemDelegate(IntPtr housingStruct, IntPtr item);
@@ -49,28 +55,39 @@ namespace ReMakePlacePlugin
         public List<HousingItem> ExteriorItemList = new List<HousingItem>();
         public List<HousingItem> UnusedItemList = new List<HousingItem>();
 
+        private HookWrapper<AtkUnitBase.Delegates.FireCallback> AddonFireCallbackHook;
+        private Stain? PreviouslySelectedStain = null;
+        private bool IsSelectingDye = false;
+
         public void Dispose()
         {
             HookManager.Dispose();
 
             DalamudApi.ClientState.TerritoryChanged -= TerritoryChanged;
-            foreach (string commandName in commandNames){
+            foreach (string commandName in commandNames)
+            {
                 DalamudApi.CommandManager.RemoveHandler($"/{commandName}");
             }
             Gui?.Dispose();
 
+            DalamudApi.AddonLifecycle.UnregisterListener(OnPostSetupDyeConfirm);
+
+            ECommonsMain.Dispose();
         }
 
         public ReMakePlacePlugin(IDalamudPluginInterface pi)
         {
+            ECommonsMain.Init(pi, this);
+
             DalamudApi.Initialize(pi);
 
             Config = DalamudApi.PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
             Config.Save();
 
             Initialize();
-            
-            foreach (string commandName in commandNames){
+
+            foreach (string commandName in commandNames)
+            {
                 DalamudApi.CommandManager.AddHandler($"/{commandName}", new CommandInfo(CommandHandler)
                 {
                     HelpMessage = "load config window."
@@ -79,14 +96,13 @@ namespace ReMakePlacePlugin
             Gui = new PluginUi(this);
             DalamudApi.ClientState.TerritoryChanged += TerritoryChanged;
 
-
             HousingData.Init(this);
             Memory.Init();
             LayoutManager = new SaveLayoutManager(this, Config);
 
             DalamudApi.PluginLog.Info("ReMakePlace Plugin v7.3.2 initialized");
         }
-        public void Initialize()
+        public unsafe void Initialize()
         {
 
             IsSaveLayoutHook = HookManager.Hook<UpdateLayoutDelegate>("40 53 48 83 ec 20 48 8b d9 48 8b 0d ?? ?? ?? ?? e8 ?? ?? ?? ?? 33 d2 48 8b c8 e8 ?? ?? ?? ?? 84 c0 75 ?? 38 83 ?? 01 00 00", IsSaveLayoutDetour);
@@ -103,6 +119,165 @@ namespace ReMakePlacePlugin
 
             GetYardIndexHook = HookManager.Hook<GetIndexDelegate>("48 89 5c 24 10 57 48 83 ec 20 0f b6 d9", GetYardIndex);
 
+            // Dyeing management (Auto Confirm Dyeing Prompt (MiragePrismMiragePlateConfirm) & Select previous dye (ColorantColoring))
+            DalamudApi.AddonLifecycle.RegisterListener(AddonEvent.PostSetup, new[] { "MiragePrismMiragePlateConfirm", "ColorantColoring" }, OnPostSetupDyeConfirm);
+
+            AddonFireCallbackHook = HookManager.HookAddress<AtkUnitBase.Delegates.FireCallback>(
+                AtkUnitBase.Addresses.FireCallback.Value,
+                FireCallbackDetour
+            );
+        }
+
+        /// <summary>
+        /// Hook the FireCallback method to capture dye selection from the ColorantColoring addon.<br/>
+        /// Used to know what dye the user selected last, so we can re-select it when re-opening the dye window later.
+        /// </summary>
+        private unsafe bool FireCallbackDetour(AtkUnitBase* addonPtr, uint valueCount, AtkValue* values, bool close)
+        {
+            var ret = AddonFireCallbackHook.Original(addonPtr, valueCount, values, close);
+
+            var addonName = addonPtr->NameString;
+            if (addonName != "ColorantColoring")
+                return ret;
+
+            if (IsSelectingDye)
+                return ret;
+
+            // From SimpleTweaks from Caraxi: https://github.com/Caraxi/SimpleTweaksPlugin/blob/main/Debugging/AddonDebug.cs#L358-L412
+            var atkValueList = new List<object>();
+            try
+            {
+                var a = values;
+                for (var i = 0; i < valueCount; i++)
+                {
+                    switch (a->Type)
+                    {
+                        case ValueType.Int:
+                            {
+                                atkValueList.Add(a->Int);
+                                break;
+                            }
+                        case ValueType.String:
+                            {
+                                atkValueList.Add(Marshal.PtrToStringUTF8(new IntPtr(a->String)));
+                                break;
+                            }
+                        case ValueType.UInt:
+                            {
+                                atkValueList.Add(a->UInt);
+                                break;
+                            }
+                        case ValueType.Bool:
+                            {
+                                atkValueList.Add(a->Byte != 0);
+                                break;
+                            }
+                        default:
+                            {
+                                atkValueList.Add($"Unknown Type: {a->Type}");
+                                break;
+                            }
+                    }
+                    a++;
+                }
+            }
+            catch
+            {
+                return ret;
+            }
+
+            if (atkValueList.Count <= 0 || atkValueList[0] is not int callbackFirstValue || callbackFirstValue != 5)
+                return ret;
+
+            if (atkValueList.Count < 2 || atkValueList[2] is not int)
+                return ret;
+
+            var stainId = (int)atkValueList[2];
+
+            var stainSheet = DalamudApi.DataManager.GetExcelSheet<Stain>();
+            if (stainSheet == null)
+                return ret;
+
+            if (stainSheet.TryGetRow((uint)stainId, out var stain))
+                PreviouslySelectedStain = stain;
+
+            return ret;
+        }
+
+        public void OnPostSetupDyeConfirm(AddonEvent type, AddonArgs args)
+        {
+            if (!Memory.Instance.IsHousingMode())
+                return;
+
+            switch (args.AddonName)
+            {
+                case "MiragePrismMiragePlateConfirm":
+                    {
+                        if (!Config.AutoConfirmDye)
+                            return;
+
+                        DalamudApi.Framework.RunOnFrameworkThread(AutoConfirmDyePrompt);
+                        return;
+                    }
+                case "ColorantColoring":
+                    {
+                        if (!Config.SelectPreviousDye)
+                            return;
+
+                        DalamudApi.Framework.RunOnFrameworkThread(SelectPreviousShade);
+                        return;
+                    }
+                default:
+                    return;
+            }
+        }
+
+        public unsafe void AutoConfirmDyePrompt()
+        {
+            if (GenericHelpers.TryGetAddonByName<AtkUnitBase>("MiragePrismMiragePlateConfirm", out var dyeConfirmAddon) && GenericHelpers.IsAddonReady(dyeConfirmAddon))
+            {
+                Callback.Fire(dyeConfirmAddon, true, 0);
+            }
+        }
+
+        public unsafe void SelectPreviousShade()
+        {
+            if (PreviouslySelectedStain == null)
+                return;
+
+            IsSelectingDye = true;
+
+            if (GenericHelpers.TryGetAddonByName<AtkUnitBase>("ColorantColoring", out var colorantColoringAddon) && GenericHelpers.IsAddonReady(colorantColoringAddon))
+            {
+                var callback = StainCallbackHelper.GetCallbackValuesForStain(PreviouslySelectedStain.Value);
+                if (callback == null)
+                    return;
+
+                Callback.Fire(colorantColoringAddon, true, callback.Value.Shade.GetCallbackValues());
+
+                DalamudApi.Framework.RunOnTick(SelectPreviousDye, TimeSpan.FromMilliseconds(100));
+            }
+            else
+            {
+                IsSelectingDye = false;
+            }
+        }
+
+        public unsafe void SelectPreviousDye()
+        {
+            if (PreviouslySelectedStain == null)
+                return;
+
+            if (GenericHelpers.TryGetAddonByName<AtkUnitBase>("ColorantColoring", out var colorantColoringAddon) && GenericHelpers.IsAddonReady(colorantColoringAddon))
+            {
+                var callback = StainCallbackHelper.GetCallbackValuesForStain(PreviouslySelectedStain.Value);
+                if (callback == null)
+                    return;
+
+                Callback.Fire(colorantColoringAddon, true, callback.Value.Stain.GetCallbackValues());
+            }
+
+            IsSelectingDye = false;
         }
 
         public delegate void PlaceItemDelegate(IntPtr housingStruct, IntPtr item);
@@ -426,7 +601,7 @@ namespace ReMakePlacePlugin
 
                 // check for -180 and 180 - also 0
                 float absRotation = Math.Abs(localRotation) + Math.Abs(houseItem.Rotate);
-                houseItem.CorrectRotation = 
+                houseItem.CorrectRotation =
                     Math.Abs(localRotation - houseItem.Rotate) < 0.001 ||
                     Math.Abs(absRotation - 2 * Math.PI) < 0.001 ||
                     absRotation < 0.001;

@@ -34,7 +34,8 @@ public class DalamudApi
     [PluginService] public static ISigScanner SigScanner { get; private set; } = null;
     // [PluginService] public static ITargetManager TargetManager { get; private set; } = null;
     // [PluginService] public static IToastGui ToastGui { get; private set; } = null;
-     [PluginService] public static IGameInteropProvider Hooks { get; private set; } = null;
+    [PluginService] public static IGameInteropProvider Hooks { get; private set; } = null;
     [PluginService] public static IPluginLog PluginLog { get; private set; } = null;
+    [PluginService] public static IAddonLifecycle AddonLifecycle { get; private set; } = null;
     // [PluginService] public static ITitleScreenMenu TitleScreenMenu { get; private set; } = null;
 }

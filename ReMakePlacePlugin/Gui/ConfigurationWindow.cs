@@ -36,27 +36,29 @@ namespace ReMakePlacePlugin.Gui
             };
         }
 
-        private void SafeMatch(){
-            if (Memory.Instance.IsHousingMode()){
+        private void SafeMatch()
+        {
+            if (Memory.Instance.IsHousingMode())
+            {
                 Plugin.MatchLayout();
             }
         }
 
         protected void DrawAllUi()
-        {   
-            
+        {
+
             DalamudApi.Framework.RunOnTick(SafeMatch, TimeSpan.FromMilliseconds(100));
             if (!ImGui.Begin(Plugin.Name, ref WindowVisible, ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse))
             {
                 return;
             }
 
-            Vector2 leftPanelSize = new Vector2(120 * ImGuiHelpers.GlobalScale, ImGui.GetWindowHeight()-30* ImGuiHelpers.GlobalScale);
+            Vector2 leftPanelSize = new Vector2(140 * ImGuiHelpers.GlobalScale, ImGui.GetWindowHeight() - 30 * ImGuiHelpers.GlobalScale);
 
             ImGui.BeginChild("LeftFloat", leftPanelSize);
             DrawMainMenu();
             DrawGeneralSettings();
-            ImGui.EndChild();ImGui.SameLine();
+            ImGui.EndChild(); ImGui.SameLine();
 
             ImGui.BeginChild("RightFloat", border: true);
             ImGui.Text($"Current file location:"); ImGui.SameLine();
@@ -139,15 +141,16 @@ namespace ReMakePlacePlugin.Gui
 
         private void LoadLayoutFromFile(bool ApplyLayout = false)
         {
-            if (!Config.SaveLocation.IsNullOrEmpty()){
+            if (!Config.SaveLocation.IsNullOrEmpty())
+            {
                 try
                 {
                     SaveLayoutManager.ImportLayout(Config.SaveLocation);
                     Log(String.Format("Imported {0} items", Plugin.InteriorItemList.Count + Plugin.ExteriorItemList.Count));
 
-                    if (CheckModeForLoad()) {Plugin.MatchLayout();}
+                    if (CheckModeForLoad()) { Plugin.MatchLayout(); }
                     Config.ResetRecord();
-                    if (CheckModeForLoad() && ApplyLayout) {Plugin.ApplyLayout();}
+                    if (CheckModeForLoad() && ApplyLayout) { Plugin.ApplyLayout(); }
                 }
                 catch (Exception e)
                 {
@@ -194,6 +197,14 @@ namespace ReMakePlacePlugin.Gui
         }
         unsafe private void DrawGeneralSettings()
         {
+            if (ImGui.Checkbox("Select Previous Dye", ref Config.SelectPreviousDye)) Config.Save();
+            if (Config.ShowTooltips && ImGui.IsItemHovered())
+                ImGui.SetTooltip("Automatically selects the previously used dye when opening the furniture Dyeing menu\nStill requires you to confirm");
+
+            if (ImGui.Checkbox("Auto. Confirm Dye", ref Config.AutoConfirmDye)) Config.Save();
+            if (Config.ShowTooltips && ImGui.IsItemHovered())
+                ImGui.SetTooltip("Will automatically press 'Yes' when dyeing");
+
             //ImGui.BeginChild("SettingsPanel", new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetFrameHeightWithSpacing() * 7));
             if (ImGui.Checkbox("Label Furniture", ref Config.DrawScreen)) Config.Save();
             if (Config.ShowTooltips && ImGui.IsItemHovered())
@@ -255,7 +266,7 @@ namespace ReMakePlacePlugin.Gui
 
             ImGui.Text("Placement Interval");
 
-            ImGui.Dummy(new Vector2(5,0)); ImGui.SameLine();
+            ImGui.Dummy(new Vector2(5, 0)); ImGui.SameLine();
             ImGui.PushItemWidth(60);
             if (ImGui.InputInt("ms", ref Config.LoadInterval))
             {
@@ -273,9 +284,9 @@ namespace ReMakePlacePlugin.Gui
                 float width = 120;
                 ImGui.BeginChild("FloorSelection", new Vector2(width, height), true, ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
                 //if (ImGui.CollapsingHeader("Enabled Floors")){
-                    if (Memory.Instance.HasUpperFloor() && ImGui.Checkbox("Upper Floor", ref Config.UpperFloor)) Config.Save();
-                    if (ImGui.Checkbox("Ground Floor", ref Config.GroundFloor)) Config.Save();
-                    if (ImGui.Checkbox("Basement", ref Config.Basement)) Config.Save();
+                if (Memory.Instance.HasUpperFloor() && ImGui.Checkbox("Upper Floor", ref Config.UpperFloor)) Config.Save();
+                if (ImGui.Checkbox("Ground Floor", ref Config.GroundFloor)) Config.Save();
+                if (ImGui.Checkbox("Basement", ref Config.Basement)) Config.Save();
                 //}
                 ImGui.EndChild();
             }
@@ -285,7 +296,7 @@ namespace ReMakePlacePlugin.Gui
         unsafe private void DrawMainMenu()
         {
             Vector2 menuDimensions = new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetContentRegionAvail().X + ImGui.GetFrameHeightWithSpacing() * 4);
-            ImGui.BeginChild("MainMenu", menuDimensions,flags: ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
+            ImGui.BeginChild("MainMenu", menuDimensions, flags: ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
 
             string pluginDir = DalamudApi.PluginInterface.AssemblyLocation.DirectoryName!;
             var imagePath = Path.Combine(pluginDir, "images/icon.png");
@@ -317,7 +328,7 @@ namespace ReMakePlacePlugin.Gui
             {
                 Config.Save();
                 LoadLayoutFromFile(true);
-            }, 
+            },
             Config.SaveLocation.IsNullOrEmpty(),
             "Attempt to apply layout from current file location",
             menuDimensions.X);
@@ -344,7 +355,7 @@ namespace ReMakePlacePlugin.Gui
             menuDimensions.X);
 
             DrawMainMenuButton("Save",
-                SaveLayoutToFile, 
+                SaveLayoutToFile,
                 Config.SaveLocation.IsNullOrEmpty(),
                 "Save layout to current file location",
                 menuDimensions.X);
@@ -532,11 +543,11 @@ namespace ReMakePlacePlugin.Gui
                 Config.Save();
             }
             ImGui.SameLine();
-            if (IconTextButton(FontAwesomeIcon.SyncAlt,"Refresh"))
+            if (IconTextButton(FontAwesomeIcon.SyncAlt, "Refresh"))
             {
                 LoadLayoutFromFile();
             }
-            
+
             // name, position, r, color, set
             int columns = isUnused ? 4 : 5;
 
@@ -545,7 +556,7 @@ namespace ReMakePlacePlugin.Gui
             {
                 if (!isUnused)
                 {
-                    ImGui.TableSetupColumn("Set", ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoResize, 25f* ImGuiHelpers.GlobalScale); // Making this fixed with can render it truncated and unreadable on higher scalings
+                    ImGui.TableSetupColumn("Set", ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoResize, 25f * ImGuiHelpers.GlobalScale); // Making this fixed with can render it truncated and unreadable on higher scalings
                 }
 
                 // Stretch columns with relative weights

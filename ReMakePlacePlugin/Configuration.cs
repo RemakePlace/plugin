@@ -1,6 +1,6 @@
-﻿using System;
+﻿using Dalamud.Configuration;
+using System;
 using System.Collections.Generic;
-using Dalamud.Configuration;
 
 namespace ReMakePlacePlugin
 {
@@ -14,7 +14,7 @@ namespace ReMakePlacePlugin
         public float DrawDistance = 0;
         public List<int> HiddenScreenItemHistory = new List<int>();
         public List<int> GroupingList = new List<int>();
-        
+
         public bool Basement = true;
         public bool GroundFloor = true;
         public bool UpperFloor = true;
@@ -22,6 +22,9 @@ namespace ReMakePlacePlugin
         public int LoadInterval = 500;
 
         public string SaveLocation = null;
+
+        public bool AutoConfirmDye = false;
+        public bool SelectPreviousDye = false;
 
         public void Save()
         {
