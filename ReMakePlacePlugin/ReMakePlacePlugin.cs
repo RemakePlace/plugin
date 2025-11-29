@@ -251,7 +251,10 @@ namespace ReMakePlacePlugin
             {
                 var callback = StainCallbackHelper.GetCallbackValuesForStain(PreviouslySelectedStain.Value);
                 if (callback == null)
+                {
+                    IsSelectingDye = false;
                     return;
+                }
 
                 Callback.Fire(colorantColoringAddon, true, callback.Value.Shade.GetCallbackValues());
 
