@@ -265,19 +265,24 @@ namespace ReMakePlacePlugin
 
         public unsafe void SelectPreviousDye()
         {
-            if (PreviouslySelectedStain == null)
-                return;
-
-            if (GenericHelpers.TryGetAddonByName<AtkUnitBase>("ColorantColoring", out var colorantColoringAddon) && GenericHelpers.IsAddonReady(colorantColoringAddon))
+            try
             {
-                var callback = StainCallbackHelper.GetCallbackValuesForStain(PreviouslySelectedStain.Value);
-                if (callback == null)
+                if (PreviouslySelectedStain == null)
                     return;
 
-                Callback.Fire(colorantColoringAddon, true, callback.Value.Stain.GetCallbackValues());
-            }
+                if (GenericHelpers.TryGetAddonByName<AtkUnitBase>("ColorantColoring", out var colorantColoringAddon) && GenericHelpers.IsAddonReady(colorantColoringAddon))
+                {
+                    var callback = StainCallbackHelper.GetCallbackValuesForStain(PreviouslySelectedStain.Value);
+                    if (callback == null)
+                        return;
 
-            IsSelectingDye = false;
+                    Callback.Fire(colorantColoringAddon, true, callback.Value.Stain.GetCallbackValues());
+                }
+            }
+            finally
+            {
+                IsSelectingDye = false;
+            }
         }
 
         public delegate void PlaceItemDelegate(IntPtr housingStruct, IntPtr item);
