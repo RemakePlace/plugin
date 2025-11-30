@@ -1,7 +1,6 @@
 ﻿using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.MJI;
 using Lumina.Excel.Sheets;
-using Microsoft.VisualBasic;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
@@ -321,6 +320,19 @@ namespace ReMakePlacePlugin
 
             // Rotate mode only.
             return HousingStructure->Mode == HousingLayoutMode.Rotate;
+        }
+
+        /// <summary>
+        /// Checks if you can dye a housing item, specifically checks that Furnishing Color mode is active.
+        /// </summary>
+        /// <returns>Boolean state if furnishing color menu is on or off.</returns>
+        public unsafe bool CanDyeItem()
+        {
+            if (HousingStructure == null)
+                return false;
+
+            // Furnishing Color mode only.
+            return HousingStructure->Mode == HousingLayoutMode.FurnishingColor;
         }
 
         /// <summary>

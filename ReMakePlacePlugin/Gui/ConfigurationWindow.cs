@@ -106,7 +106,7 @@ namespace ReMakePlacePlugin.Gui
             return false;
         }
 
-        private bool CheckModeForLoad()
+        private bool CheckModeForLoad(bool ApplyLayout = false)
         {
             if (!Memory.Instance.IsHousingMode())
             {
@@ -115,9 +115,38 @@ namespace ReMakePlacePlugin.Gui
                 return false;
             }
 
-            if (!Memory.Instance.CanEditItem())
+            if (ApplyLayout)
             {
-                LogError("Unable to load and apply layouts outside of Rotate Layout mode");
+                if (!Memory.Instance.CanEditItem())
+                {
+                    LogError("Unable to load and apply layouts outside of Rotate Layout mode");
+                    return false;
+                }
+            }
+            else
+            {
+                if (!Memory.Instance.CanEditItem() && !Memory.Instance.CanDyeItem())
+                {
+                    LogError("Unable to load layouts outside of Rotate Layout mode or Furnishing Color mode");
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private bool CheckModeForApplyDyes()
+        {
+            if (!Memory.Instance.IsHousingMode())
+            {
+                //LogError("Unable to load layouts outside of Layout mode");
+                //LogLayoutMode();
+                return false;
+            }
+
+            if (!Memory.Instance.CanDyeItem())
+            {
+                LogError("Unable to load and apply dyes outside of Furnishing Color mode");
                 return false;
             }
 
@@ -148,13 +177,33 @@ namespace ReMakePlacePlugin.Gui
                     SaveLayoutManager.ImportLayout(Config.SaveLocation);
                     Log(String.Format("Imported {0} items", Plugin.InteriorItemList.Count + Plugin.ExteriorItemList.Count));
 
-                    if (CheckModeForLoad()) { Plugin.MatchLayout(); }
+                    if (CheckModeForLoad(ApplyLayout)) { Plugin.MatchLayout(); }
                     Config.ResetRecord();
-                    if (CheckModeForLoad() && ApplyLayout) { Plugin.ApplyLayout(); }
+                    if (CheckModeForLoad(ApplyLayout) && ApplyLayout) { Plugin.ApplyLayout(); }
                 }
                 catch (Exception e)
                 {
                     LogError($"Load Error: {e.Message}", e.StackTrace);
+                }
+            }
+        }
+
+        private void ApplyDyesFromFile()
+        {
+            if (!Config.SaveLocation.IsNullOrEmpty())
+            {
+                try
+                {
+                    SaveLayoutManager.ImportLayout(Config.SaveLocation);
+                    Log(String.Format("Imported {0} items", Plugin.InteriorItemList.Count + Plugin.ExteriorItemList.Count));
+
+                    if (CheckModeForApplyDyes()) { Plugin.MatchLayout(); }
+                    Config.ResetRecord();
+                    if (CheckModeForApplyDyes()) { Plugin.ApplyDyes(); }
+                }
+                catch (Exception e)
+                {
+                    LogError($"Apply Dyes Error: {e.Message}", e.StackTrace);
                 }
             }
         }
@@ -295,7 +344,7 @@ namespace ReMakePlacePlugin.Gui
 
         unsafe private void DrawMainMenu()
         {
-            Vector2 menuDimensions = new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetContentRegionAvail().X + ImGui.GetFrameHeightWithSpacing() * 4);
+            Vector2 menuDimensions = new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetContentRegionAvail().X + ImGui.GetFrameHeightWithSpacing() * 5);
             ImGui.BeginChild("MainMenu", menuDimensions, flags: ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
 
             string pluginDir = DalamudApi.PluginInterface.AssemblyLocation.DirectoryName!;
@@ -331,6 +380,15 @@ namespace ReMakePlacePlugin.Gui
             },
             Config.SaveLocation.IsNullOrEmpty(),
             "Attempt to apply layout from current file location",
+            menuDimensions.X);
+
+            DrawMainMenuButton("Apply Dyes", () =>
+            {
+                Config.Save();
+                ApplyDyesFromFile();
+            },
+            Config.SaveLocation.IsNullOrEmpty(),
+            "Attempt to apply dyes, Furnishing Color window needs to be open",
             menuDimensions.X);
 
             DrawMainMenuButton("Save As", () =>

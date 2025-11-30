@@ -1,10 +1,14 @@
 ﻿using Dalamud.Game.Addon.Lifecycle;
 using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
 using Dalamud.Game.Command;
+using Dalamud.Game.NativeWrapper;
 using Dalamud.Plugin;
 using ECommons;
 using ECommons.Automation;
+using ECommons.Automation.NeoTaskManager;
 using FFXIVClientStructs.FFXIV.Client.Game;
+using FFXIVClientStructs.FFXIV.Client.System.Framework;
+using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using Lumina.Excel.Sheets;
 using ReMakePlacePlugin.Objects;
@@ -16,6 +20,7 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using static ReMakePlacePlugin.Memory;
 using HousingFurniture = Lumina.Excel.Sheets.HousingFurniture;
+using TaskManager = ECommons.Automation.NeoTaskManager.TaskManager;
 using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
 
 namespace ReMakePlacePlugin
@@ -31,6 +36,8 @@ namespace ReMakePlacePlugin
 
         public static List<HousingItem> ItemsToPlace = new List<HousingItem>();
 
+        public static List<HousingItem> ItemsToDye = new List<HousingItem>();
+
         private delegate bool UpdateLayoutDelegate(IntPtr a1);
         private HookWrapper<UpdateLayoutDelegate> IsSaveLayoutHook;
 
@@ -38,7 +45,15 @@ namespace ReMakePlacePlugin
         public delegate void SelectItemDelegate(IntPtr housingStruct, IntPtr item);
         private static HookWrapper<SelectItemDelegate> SelectItemHook;
 
+        public delegate long GetSelectedHousingItemAddressDelegate(long housingManager);
+        private static HookWrapper<GetSelectedHousingItemAddressDelegate> GetSelectedHousingItemAddressHook;
+
+        public delegate void InteractWithHousingItemDelegate(long agentHousingPtr, long unk);
+        private static HookWrapper<InteractWithHousingItemDelegate> InteractWithHousingItemHook;
+
         public static bool CurrentlyPlacingItems = false;
+
+        public static bool CurrentlyDyeingItems = false;
 
         public static bool OriginalPlaceAnywhere = false;
 
@@ -59,6 +74,8 @@ namespace ReMakePlacePlugin
         private Stain? PreviouslySelectedStain = null;
         private bool IsSelectingDye = false;
 
+        private TaskManager TaskManager;
+
         public void Dispose()
         {
             HookManager.Dispose();
@@ -78,6 +95,23 @@ namespace ReMakePlacePlugin
         public ReMakePlacePlugin(IDalamudPluginInterface pi)
         {
             ECommonsMain.Init(pi, this);
+
+            var config = new TaskManagerConfiguration()
+            {
+                OnTaskException = (task, ex, ref @continue, ref abort) =>
+                {
+                    LogError($"Error during dyeing task '{task.Name}'.");
+                    CurrentlyDyeingItems = false;
+                },
+                OnTaskTimeout = (task, ref remainingTimeMs) =>
+                {
+                    LogError($"Timeout during dyeing task '{task.Name}'.");
+                    CurrentlyDyeingItems = false;
+                },
+                TimeLimitMS = 5000,
+            };
+
+            TaskManager = new TaskManager(config);
 
             DalamudApi.Initialize(pi);
 
@@ -122,10 +156,35 @@ namespace ReMakePlacePlugin
             // Dyeing management (Auto Confirm Dyeing Prompt (MiragePrismMiragePlateConfirm) & Select previous dye (ColorantColoring))
             DalamudApi.AddonLifecycle.RegisterListener(AddonEvent.PostSetup, new[] { "MiragePrismMiragePlateConfirm", "ColorantColoring" }, OnPostSetupDyeConfirm);
 
-            AddonFireCallbackHook = HookManager.HookAddress<AtkUnitBase.Delegates.FireCallback>(
-                AtkUnitBase.Addresses.FireCallback.Value,
-                FireCallbackDetour
-            );
+            AddonFireCallbackHook = HookManager.HookAddress<AtkUnitBase.Delegates.FireCallback>(AtkUnitBase.Addresses.FireCallback.Value, FireCallbackDetour);
+
+            InteractWithHousingItemHook = HookManager.Hook<InteractWithHousingItemDelegate>("48 85 D2 0F 84 ?? ?? ?? ?? 57 41 56 48 83 EC ?? 0F B6 81", InteractWithHousingItemDetour);
+            GetSelectedHousingItemAddressHook = HookManager.Hook<GetSelectedHousingItemAddressDelegate>("E8 ?? ?? ?? ?? 48 85 C0 75 ?? E8 ?? ?? ?? ?? 48 8B C8 E8 ?? ?? ?? ?? 84 C0 75 ?? E8 ?? ?? ?? ?? 48 8B C8 E8 ?? ?? ?? ?? 8B 8B", GetSelectedHousingItemAddressDetour);
+        }
+
+        private unsafe long GetSelectedHousingItemAddressDetour(long housingManager)
+        {
+            return GetSelectedHousingItemAddressHook.Original(housingManager);
+        }
+
+        private unsafe void InteractWithHousingItemDetour(long agentHousingPtr, long unk)
+        {
+            InteractWithHousingItemHook.Original(agentHousingPtr, unk);
+        }
+
+        private unsafe void InteractWithSelectedItem()
+        {
+            var agentHousing = Framework.Instance()->GetUIModule()->GetAgentModule()->GetAgentByInternalId(AgentId.Housing);
+            var housingManager = HousingManager.Instance();
+
+            var stuff = GetSelectedHousingItemAddressHook.Original((long)housingManager);
+            if (stuff == 0)
+            {
+                LogError("No item selected to interact with.");
+                return;
+            }
+
+            InteractWithHousingItemHook.Original((long)agentHousing, stuff);
         }
 
         /// <summary>
@@ -232,22 +291,24 @@ namespace ReMakePlacePlugin
             }
         }
 
-        public unsafe void AutoConfirmDyePrompt()
+        public unsafe bool AutoConfirmDyePrompt()
         {
-            if (GenericHelpers.TryGetAddonByName<AtkUnitBase>("MiragePrismMiragePlateConfirm", out var dyeConfirmAddon) && GenericHelpers.IsAddonReady(dyeConfirmAddon))
+            if (IsAddonReady("MiragePrismMiragePlateConfirm", out var dyeConfirmAddon))
             {
                 Callback.Fire(dyeConfirmAddon, true, 0);
+                return true;
             }
+            return false;
         }
 
         public unsafe void SelectPreviousShade()
         {
-            if (PreviouslySelectedStain == null)
+            if (CurrentlyDyeingItems || PreviouslySelectedStain == null)
                 return;
 
             IsSelectingDye = true;
 
-            if (GenericHelpers.TryGetAddonByName<AtkUnitBase>("ColorantColoring", out var colorantColoringAddon) && GenericHelpers.IsAddonReady(colorantColoringAddon))
+            if (IsAddonReady("ColorantColoring", out var colorantColoringAddon))
             {
                 var callback = StainCallbackHelper.GetCallbackValuesForStain(PreviouslySelectedStain.Value);
                 if (callback == null)
@@ -270,10 +331,10 @@ namespace ReMakePlacePlugin
         {
             try
             {
-                if (PreviouslySelectedStain == null)
+                if (CurrentlyDyeingItems || PreviouslySelectedStain == null)
                     return;
 
-                if (GenericHelpers.TryGetAddonByName<AtkUnitBase>("ColorantColoring", out var colorantColoringAddon) && GenericHelpers.IsAddonReady(colorantColoringAddon))
+                if (IsAddonReady("ColorantColoring", out var colorantColoringAddon))
                 {
                     var callback = StainCallbackHelper.GetCallbackValuesForStain(PreviouslySelectedStain.Value);
                     if (callback == null)
@@ -347,12 +408,10 @@ namespace ReMakePlacePlugin
             SelectItemHook.Original(housing, item);
         }
 
-
         unsafe static public void SelectItem(IntPtr item)
         {
             SelectItemDetour((IntPtr)Memory.Instance.HousingStructure, item);
         }
-
 
         public unsafe void RecursivelyPlaceItems()
         {
@@ -495,6 +554,274 @@ namespace ReMakePlacePlugin
 
             RecursivelyPlaceItems();
         }
+
+        public void ApplyDyes()
+        {
+            if (CurrentlyDyeingItems)
+            {
+                Log($"Already dyeing items");
+                return;
+            }
+
+            CurrentlyDyeingItems = true;
+            Log($"Applying dyes with interval of {Config.LoadInterval}ms");
+
+            ItemsToDye.Clear();
+
+            List<HousingItem> toBeDyed;
+
+            if (Memory.Instance.GetCurrentTerritory() == Memory.HousingArea.Indoors)
+            {
+                toBeDyed = new List<HousingItem>();
+                foreach (var houseItem in InteriorItemList)
+                {
+                    if (IsSelectedFloor(houseItem.Y) && !houseItem.DyeMatch)
+                    {
+                        toBeDyed.Add(houseItem);
+                    }
+                }
+            }
+            else
+            {
+                toBeDyed = new List<HousingItem>();
+                foreach (var houseItem in ExteriorItemList)
+                {
+                    if (!houseItem.DyeMatch)
+                    {
+                        toBeDyed.Add(houseItem);
+                    }
+                }
+            }
+
+            ItemsToDye.AddRange(toBeDyed);
+
+            if (ItemsToDye.Count == 0)
+            {
+                Log("No items need dyeing");
+                CurrentlyDyeingItems = false;
+                return;
+            }
+
+            Log($"Found {ItemsToDye.Count} items to dye");
+
+            DyeAllItems();
+        }
+
+        public unsafe void DyeAllItems()
+        {
+            try
+            {
+                if (ItemsToDye.Count == 0)
+                {
+                    CurrentlyDyeingItems = false;
+                    Log("Finished applying dyes");
+                    if (IsAddonReady("ColorantColoring", out var addon))
+                        Callback.Fire(addon, true, 2);
+                    return;
+                }
+
+                var item = ItemsToDye.First();
+                ItemsToDye.RemoveAt(0);
+
+                if (item.ItemStruct == IntPtr.Zero)
+                {
+                    DyeAllItems();
+                    return;
+                }
+
+                if (item.DyeMatch)
+                {
+                    Log($"{item.Name} is already correctly dyed");
+                    DyeAllItems();
+                    return;
+                }
+
+                SetItemDye(item);
+            }
+            catch (Exception e)
+            {
+                LogError($"Error: {e.Message}", e.StackTrace);
+                CurrentlyDyeingItems = false;
+                Log("Finished applying dyes with errors");
+            }
+        }
+
+        unsafe public void SetItemDye(HousingItem rowItem)
+        {
+            if (!Memory.Instance.CanDyeItem())
+            {
+                LogError("Unable to dye item outside of Furnishing Color mode");
+                CurrentlyDyeingItems = false;
+                return;
+            }
+
+            if (rowItem.ItemStruct == IntPtr.Zero)
+            {
+                DyeAllItems();
+                return;
+            }
+
+            Log($"Dyeing {rowItem.Name}");
+
+            Stain stain;
+            if (!DalamudApi.DataManager.GetExcelSheet<Stain>().TryGetRow(rowItem.Stain, out stain))
+            {
+                LogError($"Invalid stain ID {rowItem.Stain} for item {rowItem.Name}");
+                DyeAllItems();
+                return;
+            }
+
+            // Check if dye addon is open, if yes close it, if not continue
+            TaskManager.Enqueue(() =>
+            {
+                if (IsAddonReady("ColorantColoring", out var addon))
+                    Callback.Fire(addon, true, 2);
+
+                return true;
+            }, "Close Dye addon if open");
+
+            TaskManager.Enqueue(() => SelectItem(rowItem.ItemStruct), "SelectItem");
+            TaskManager.EnqueueDelay(100);
+            TaskManager.Enqueue(InteractWithSelectedItem, "Interact with previously selected Item");
+            TaskManager.Enqueue(() => IsAddonReady("ColorantColoring", out var a), "Wait for Dye addon");
+            TaskManager.Enqueue(() =>
+            {
+                if (IsAddonReady("ColorantColoring", out var addon))
+                {
+                    var callback = StainCallbackHelper.GetCallbackValuesForStain(stain);
+                    if (callback == null)
+                        return false;
+
+                    Callback.Fire(addon, true, callback.Value.Shade.GetCallbackValues());
+                    return true;
+                }
+                return false;
+            }, "Select Shade");
+            TaskManager.EnqueueDelay(100);
+            TaskManager.Enqueue(() =>
+            {
+                if (IsAddonReady("ColorantColoring", out var addon))
+                {
+                    var callback = StainCallbackHelper.GetCallbackValuesForStain(stain);
+                    if (callback == null)
+                        return false;
+
+                    Callback.Fire(addon, true, callback.Value.Stain.GetCallbackValues());
+                    return true;
+                }
+                return false;
+            }, "Select Dye");
+
+            // Check if "Dye" button is greyed, if yes skip item
+            TaskManager.Enqueue(() =>
+            {
+                if (IsAddonReady("ColorantColoring", out var addon))
+                {
+                    try
+                    {
+                        var nineGridNode = GenericHelpers.GetNodeByIDChain(addon->RootNode, 1, 64, 68, 3)->GetAsAtkNineGridNode();
+                        if (nineGridNode->Color.RGBA == 0xFFFFFFB2)
+                        {
+                            // Dye button is disabled, skip item
+                            TaskManager.Abort();
+                            DyeAllItems();
+                            return true;
+                        }
+                        else
+                        {
+                            return true;
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        TaskManager.Abort();
+                        DyeAllItems();
+                        return true;
+                    }
+                }
+                return false;
+            }, "Check if Dye button is disabled");
+
+            // Check if red "x" is visible, if yes skip item because it means we don't have enough dye.
+            // Otherwise, click "Dye" button
+            TaskManager.Enqueue(() =>
+            {
+                if (IsAddonReady("ColorantColoring", out var addon))
+                {
+                    try
+                    {
+                        var indexOfDye = stain.SubOrder - 1;
+                        var nodeIndex = indexOfDye == 0 ? 2 : 21000 + indexOfDye;
+
+                        var redCrossResNode = GenericHelpers.GetNodeByIDChain(addon->RootNode, 1, 22, 34, nodeIndex, 5, 2);
+                        var redCrossImageNode = GenericHelpers.GetNodeByIDChain(redCrossResNode, 2, 4)->GetAsAtkImageNode();
+                        if (redCrossImageNode->IsVisible())
+                        {
+                            Log($"Not enough dye for {rowItem.Name}.");
+                            TaskManager.Abort();
+                            DyeAllItems();
+                            return true;
+                        }
+                        else
+                        {
+                            Callback.Fire(addon, true, 0);
+                            return true;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        TaskManager.Abort();
+                        DyeAllItems();
+                        return true;
+                    }
+                }
+                return false;
+            }, "Check if player has enough dye, if yes click Dye button");
+
+            TaskManager.EnqueueDelay(100);
+
+            // Check if dye addon is still open, if yes close it, if not rowItem.DyeMatch = true;
+            TaskManager.Enqueue(() =>
+            {
+                if (IsAddonReady("ColorantColoring", out var addon))
+                    Callback.Fire(addon, true, 2);
+                else
+                    rowItem.DyeMatch = true;
+
+                return true;
+            }, "Close Dye addon or mark item as dyed");
+
+            // Wait configured delay (Min 100ms)
+            TaskManager.EnqueueDelay(Math.Max(Config.LoadInterval, 100));
+
+            TaskManager.Enqueue(() =>
+            {
+                DyeAllItems();
+                return true;
+            }, "Process next item");
+        }
+
+        public unsafe bool IsAddonReady(string addonName, out AtkUnitBase* addonPtr)
+        {
+            AtkUnitBasePtr addonFromName = DalamudApi.GameGui.GetAddonByName(addonName);
+            if (addonFromName == IntPtr.Zero)
+            {
+                addonPtr = null;
+                return false;
+            }
+
+            var addon = (AtkUnitBase*)addonFromName.Address;
+
+            if (!GenericHelpers.IsAddonReady(addon))
+            {
+                addonPtr = null;
+                return false;
+            }
+
+            addonPtr = addon;
+            return true;
+        }
+
 
         public bool MatchItem(HousingItem item, uint itemKey)
         {

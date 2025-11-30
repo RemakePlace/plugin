@@ -28,7 +28,7 @@ public class DalamudApi
     // [PluginService] public static IJobGauges JobGauges { get; private set; } = null;
     // [PluginService] public static IKeyState KeyState { get; private set; } = null;
     // [PluginService] public static ILibcFunction LibcFunction { get; private set; } = null;
-    //[PluginService] public static IObjectTable ObjectTable { get; private set; } = null;
+    [PluginService] public static IObjectTable ObjectTable { get; private set; } = null;
     // [PluginService] public static IPartyFinderGui PartyFinderGui { get; private set; } = null;
     // [PluginService] public static IPartyList PartyList { get; private set; } = null;
     [PluginService] public static ISigScanner SigScanner { get; private set; } = null;

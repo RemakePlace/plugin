@@ -68,6 +68,7 @@ namespace ReMakePlacePlugin
         Rotate,
         Store,
         Place,
+        FurnishingColor = 5,
         Remove = 6
     }
 
