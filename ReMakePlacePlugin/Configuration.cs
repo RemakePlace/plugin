@@ -25,6 +25,7 @@ namespace ReMakePlacePlugin
 
         public bool AutoConfirmDye = false;
         public bool SelectPreviousDye = false;
+        public bool UseRareStains = false;
 
         public void Save()
         {

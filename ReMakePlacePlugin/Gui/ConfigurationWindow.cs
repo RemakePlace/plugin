@@ -200,6 +200,7 @@ namespace ReMakePlacePlugin.Gui
                     if (CheckModeForApplyDyes()) { Plugin.MatchLayout(); }
                     Config.ResetRecord();
                     if (CheckModeForApplyDyes()) { Plugin.ApplyDyes(); }
+                    else { Log($"Dyes cannot be applies outside of Furnishing Color mode."); }
                 }
                 catch (Exception e)
                 {
@@ -253,6 +254,10 @@ namespace ReMakePlacePlugin.Gui
             if (ImGui.Checkbox("Auto. Confirm Dye", ref Config.AutoConfirmDye)) Config.Save();
             if (Config.ShowTooltips && ImGui.IsItemHovered())
                 ImGui.SetTooltip("Will automatically press 'Yes' when dyeing");
+
+            if (ImGui.Checkbox("Use Rare Dyes", ref Config.UseRareStains)) Config.Save();
+            if (Config.ShowTooltips && ImGui.IsItemHovered())
+                ImGui.SetTooltip("Will allow usage of rare dyes such as Pure White, Jet Black, etc.");
 
             //ImGui.BeginChild("SettingsPanel", new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetFrameHeightWithSpacing() * 7));
             if (ImGui.Checkbox("Label Furniture", ref Config.DrawScreen)) Config.Save();
@@ -382,13 +387,24 @@ namespace ReMakePlacePlugin.Gui
             "Attempt to apply layout from current file location",
             menuDimensions.X);
 
-            DrawMainMenuButton("Apply Dyes", () =>
+            var ctrlKeyPressed = ImGui.GetIO().KeyCtrl;
+            var dyeingItems = ReMakePlacePlugin.CurrentlyDyeingItems;
+
+            DrawMainMenuButton(dyeingItems ? "Stop Dyeing" : "Apply Dyes", () =>
             {
-                Config.Save();
-                ApplyDyesFromFile();
+                if (dyeingItems)
+                {
+                    Plugin.StopDyeingItems();
+                }
+                else
+                {
+                    Config.Save();
+                    ApplyDyesFromFile();
+                }
             },
-            Config.SaveLocation.IsNullOrEmpty(),
-            "Attempt to apply dyes, Furnishing Color window needs to be open",
+            dyeingItems ? false : (Config.SaveLocation.IsNullOrEmpty() || !ctrlKeyPressed),
+            dyeingItems ? "Will stop applying Dyes to furnitures" :
+                (ctrlKeyPressed ? "Attempt to apply dyes, Furnishing Color window needs to be open" : "Hold CTRL to apply dyes"),
             menuDimensions.X);
 
             DrawMainMenuButton("Save As", () =>
@@ -425,15 +441,13 @@ namespace ReMakePlacePlugin.Gui
         {
             float height = ImGui.GetFrameHeight();
 
-
             ImGui.BeginDisabled(disabled);
             if (ImGui.Button(label, new Vector2(width, height)) && !disabled)
                 onClick();
-
-            if (!string.IsNullOrEmpty(tooltip) && ImGui.IsItemHovered())
-                ImGui.SetTooltip(tooltip);
-
             ImGui.EndDisabled();
+
+            if (!string.IsNullOrEmpty(tooltip) && ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+                ImGui.SetTooltip(tooltip);
         }
 
 

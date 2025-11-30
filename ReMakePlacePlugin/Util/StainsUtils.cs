@@ -1,5 +1,6 @@
 ﻿using Lumina.Excel.Sheets;
 using System;
+using System.Collections.Generic;
 
 namespace ReMakePlacePlugin.Util
 {
@@ -88,5 +89,23 @@ namespace ReMakePlacePlugin.Util
 
             return new StainCallback(shade, stainValues);
         }
+    }
+
+    class RareStains
+    {
+        public static List<uint> RareStainIds = new()
+        {
+            101, // Pure White
+            102, // Jet Black
+            103, // Pastel Pink
+            104, // Dark Red
+            105, // Dark Brown
+            106, // Pastel Green
+            107, // Dark Green
+            108, // Pastel Blue
+            109, // Dark Blue
+            110, // Pastel Purple
+            111, // Dark Purple
+        };
     }
 }

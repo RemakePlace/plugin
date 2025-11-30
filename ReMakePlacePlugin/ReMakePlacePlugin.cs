@@ -73,6 +73,7 @@ namespace ReMakePlacePlugin
         private HookWrapper<AtkUnitBase.Delegates.FireCallback> AddonFireCallbackHook;
         private Stain? PreviouslySelectedStain = null;
         private bool IsSelectingDye = false;
+        private List<uint> MissingDyes = new List<uint>();
 
         private TaskManager TaskManager;
 
@@ -101,13 +102,15 @@ namespace ReMakePlacePlugin
                 OnTaskException = (task, ex, ref @continue, ref abort) =>
                 {
                     LogError($"Error during dyeing task '{task.Name}'.");
-                    CurrentlyDyeingItems = false;
+                    DyeAllItems();
                 },
                 OnTaskTimeout = (task, ref remainingTimeMs) =>
                 {
                     LogError($"Timeout during dyeing task '{task.Name}'.");
-                    CurrentlyDyeingItems = false;
+                    DyeAllItems();
                 },
+                AbortOnError = true,
+                AbortOnTimeout = true,
                 TimeLimitMS = 5000,
             };
 
@@ -272,7 +275,7 @@ namespace ReMakePlacePlugin
             {
                 case "MiragePrismMiragePlateConfirm":
                     {
-                        if (!Config.AutoConfirmDye)
+                        if (!CurrentlyDyeingItems && !Config.AutoConfirmDye)
                             return;
 
                         DalamudApi.Framework.RunOnFrameworkThread(AutoConfirmDyePrompt);
@@ -615,8 +618,15 @@ namespace ReMakePlacePlugin
                 {
                     CurrentlyDyeingItems = false;
                     Log("Finished applying dyes");
+
                     if (IsAddonReady("ColorantColoring", out var addon))
                         Callback.Fire(addon, true, 2);
+
+                    if (IsAddonReady("MiragePrismMiragePlateConfirm", out var confirmAddon))
+                        Callback.Fire(confirmAddon, true, -1);
+
+                    MissingDyes.Clear();
+
                     return;
                 }
 
@@ -636,6 +646,20 @@ namespace ReMakePlacePlugin
                     return;
                 }
 
+                if (RareStains.RareStainIds.Contains(item.Stain) && !Config.UseRareStains)
+                {
+                    Log($"{item.Name} is dyed with a rare dye, skipping it");
+                    DyeAllItems();
+                    return;
+                }
+
+                if (MissingDyes.Contains(item.Stain))
+                {
+                    Log($"Missing dye for {item.Name}, skipping it");
+                    DyeAllItems();
+                    return;
+                }
+
                 SetItemDye(item);
             }
             catch (Exception e)
@@ -643,6 +667,31 @@ namespace ReMakePlacePlugin
                 LogError($"Error: {e.Message}", e.StackTrace);
                 CurrentlyDyeingItems = false;
                 Log("Finished applying dyes with errors");
+            }
+        }
+
+        public unsafe void StopDyeingItems()
+        {
+            try
+            {
+                ItemsToDye.Clear();
+                TaskManager.Abort();
+                CurrentlyDyeingItems = false;
+
+                // Close any open dye addons
+                if (IsAddonReady("ColorantColoring", out var colorantAddon))
+                    Callback.Fire(colorantAddon, true, 2);
+
+                if (IsAddonReady("MiragePrismMiragePlateConfirm", out var confirmAddon))
+                    Callback.Fire(confirmAddon, true, -1);
+
+                MissingDyes.Clear();
+
+                Log("Dyeing process stopped");
+            }
+            catch (Exception e)
+            {
+                LogError($"Error stopping dyeing process: {e.Message}", e.StackTrace);
             }
         }
 
@@ -662,6 +711,20 @@ namespace ReMakePlacePlugin
             }
 
             Log($"Dyeing {rowItem.Name}");
+
+            if (RareStains.RareStainIds.Contains(rowItem.Stain) && !Config.UseRareStains)
+            {
+                Log($"{rowItem.Name} is dyed with a rare dye, skipping it");
+                DyeAllItems();
+                return;
+            }
+
+            if (MissingDyes.Contains(rowItem.Stain))
+            {
+                Log($"Missing dye for {rowItem.Name}, skipping it");
+                DyeAllItems();
+                return;
+            }
 
             Stain stain;
             if (!DalamudApi.DataManager.GetExcelSheet<Stain>().TryGetRow(rowItem.Stain, out stain))
@@ -759,6 +822,7 @@ namespace ReMakePlacePlugin
                         if (redCrossImageNode->IsVisible())
                         {
                             Log($"Not enough dye for {rowItem.Name}.");
+                            MissingDyes.Add(stain.RowId);
                             TaskManager.Abort();
                             DyeAllItems();
                             return true;
@@ -772,6 +836,7 @@ namespace ReMakePlacePlugin
                     catch (Exception)
                     {
                         Log($"Not enough dye for {rowItem.Name}.");
+                        MissingDyes.Add(stain.RowId);
                         TaskManager.Abort();
                         DyeAllItems();
                         return true;
