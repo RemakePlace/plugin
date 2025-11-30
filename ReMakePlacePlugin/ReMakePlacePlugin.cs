@@ -633,33 +633,6 @@ namespace ReMakePlacePlugin
                 var item = ItemsToDye.First();
                 ItemsToDye.RemoveAt(0);
 
-                if (item.ItemStruct == IntPtr.Zero)
-                {
-                    DyeAllItems();
-                    return;
-                }
-
-                if (item.DyeMatch)
-                {
-                    Log($"{item.Name} is already correctly dyed");
-                    DyeAllItems();
-                    return;
-                }
-
-                if (RareStains.RareStainIds.Contains(item.Stain) && !Config.UseRareStains)
-                {
-                    Log($"{item.Name} is dyed with a rare dye, skipping it");
-                    DyeAllItems();
-                    return;
-                }
-
-                if (MissingDyes.Contains(item.Stain))
-                {
-                    Log($"Missing dye for {item.Name}, skipping it");
-                    DyeAllItems();
-                    return;
-                }
-
                 SetItemDye(item);
             }
             catch (Exception e)
@@ -700,12 +673,19 @@ namespace ReMakePlacePlugin
             if (!Memory.Instance.CanDyeItem())
             {
                 LogError("Unable to dye item outside of Furnishing Color mode");
-                CurrentlyDyeingItems = false;
+                StopDyeingItems();
                 return;
             }
 
             if (rowItem.ItemStruct == IntPtr.Zero)
             {
+                DyeAllItems();
+                return;
+            }
+
+            if (rowItem.DyeMatch)
+            {
+                Log($"{rowItem.Name} is already correctly dyed");
                 DyeAllItems();
                 return;
             }
@@ -852,8 +832,6 @@ namespace ReMakePlacePlugin
             {
                 if (IsAddonReady("ColorantColoring", out var addon))
                     Callback.Fire(addon, true, 2);
-                else
-                    rowItem.DyeMatch = true;
 
                 return true;
             }, "Close Dye addon or mark item as dyed");
@@ -1008,6 +986,22 @@ namespace ReMakePlacePlugin
                     Math.Abs(absRotation - 2 * Math.PI) < 0.001 ||
                     absRotation < 0.001;
 
+                // Check if dye/material matches
+                houseItem.DyeMatch = true;
+                if (houseItem.Stain != gameObject.color)
+                {
+                    houseItem.DyeMatch = false;
+                }
+                else if (houseItem.MaterialItemKey != 0)
+                {
+                    var matNumber = gameObject.Item->MaterialManager->MaterialSlot1;
+                    var matItemKey = HousingData.Instance.GetMaterialItemKey(houseItem.ItemKey, matNumber);
+                    if (matItemKey != houseItem.MaterialItemKey)
+                    {
+                        houseItem.DyeMatch = false;
+                    }
+                }
+
                 houseItem.ItemStruct = (IntPtr)gameObject.Item;
             }
 
@@ -1065,7 +1059,24 @@ namespace ReMakePlacePlugin
                 houseItem.CorrectLocation = locationError.LengthSquared() < 0.0001;
                 houseItem.CorrectRotation = localRotation - houseItem.Rotate < 0.001;
 
+                // Check if dye/material matches  
                 houseItem.DyeMatch = false;
+                if (houseItem.Stain == gameObject.color)
+                {
+                    if (houseItem.MaterialItemKey == 0)
+                    {
+                        houseItem.DyeMatch = true;
+                    }
+                    else
+                    {
+                        var matNumber = gameObject.Item->MaterialManager->MaterialSlot1;
+                        var matItemKey = HousingData.Instance.GetMaterialItemKey(houseItem.ItemKey, matNumber);
+                        if (matItemKey == houseItem.MaterialItemKey)
+                        {
+                            houseItem.DyeMatch = true;
+                        }
+                    }
+                }
 
                 houseItem.ItemStruct = (IntPtr)gameObject.Item;
 
