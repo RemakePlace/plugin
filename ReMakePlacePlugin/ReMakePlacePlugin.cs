@@ -723,6 +723,7 @@ namespace ReMakePlacePlugin
                         if (nineGridNode->Color.RGBA == 0xFFFFFFB2)
                         {
                             // Dye button is disabled, skip item
+                            Log($"Dye button is disabled for {rowItem.Name}, skipping.");
                             TaskManager.Abort();
                             DyeAllItems();
                             return true;
@@ -734,6 +735,7 @@ namespace ReMakePlacePlugin
                     }
                     catch (Exception)
                     {
+                        Log($"Dye button is disabled for {rowItem.Name}, skipping.");
                         TaskManager.Abort();
                         DyeAllItems();
                         return true;
@@ -754,8 +756,9 @@ namespace ReMakePlacePlugin
                         var nodeIndex = indexOfDye == 0 ? 2 : 21000 + indexOfDye;
 
                         var redCrossResNode = GenericHelpers.GetNodeByIDChain(addon->RootNode, 1, 22, 34, nodeIndex, 5, 2);
-                        var redCrossImageNode = GenericHelpers.GetNodeByIDChain(redCrossResNode, 2, 4)->GetAsAtkImageNode();
-                        if (redCrossImageNode->IsVisible())
+                        //var redCrossImageNode = GenericHelpers.GetNodeByIDChain(redCrossResNode, 2, 4)->GetAsAtkImageNode(); // Throws for some reason
+                        var redCrossImageNode = GenericHelpers.GetNodeByIDChain(redCrossResNode, 2, 4);
+                        if (redCrossImageNode->IsVisible()) // Will always be false because GetAsAtkImageNode() always throw, so for now we keep it like this, but needs fixing
                         {
                             Log($"Not enough dye for {rowItem.Name}.");
                             TaskManager.Abort();
@@ -768,8 +771,9 @@ namespace ReMakePlacePlugin
                             return true;
                         }
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
+                        Log($"Not enough dye for {rowItem.Name}.");
                         TaskManager.Abort();
                         DyeAllItems();
                         return true;
