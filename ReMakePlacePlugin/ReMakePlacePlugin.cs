@@ -755,12 +755,7 @@ namespace ReMakePlacePlugin
                         var indexOfDye = stain.SubOrder - 1;
                         var nodeIndex = indexOfDye == 0 ? 2 : 21000 + indexOfDye;
 
-                        var redCrossResNode = GenericHelpers.GetNodeByIDChain(addon->RootNode, 1, 22, 34, nodeIndex, 5, 2);
-                        //var redCrossImageNode = GenericHelpers.GetNodeByIDChain(redCrossResNode, 2, 4)->GetAsAtkImageNode(); // Throws for some reason
-                        var redCrossImageNode = GenericHelpers.GetNodeByIDChain(redCrossResNode, 2, 4);
-                        // Check below will always be false for some reason
-                        // GetAsAtkImageNode() always throw, and removing it just makes it return false so for now we keep it like this, but needs fixing
-                        // Not an immediate issue, game just says "Could not apply dye" and moves on
+                        var redCrossImageNode = GenericHelpers.GetNodeByIDChain(addon->RootNode, 1, 22, 34, nodeIndex, 2, 4)->GetAsAtkImageNode();
                         if (redCrossImageNode->IsVisible())
                         {
                             Log($"Not enough dye for {rowItem.Name}.");
