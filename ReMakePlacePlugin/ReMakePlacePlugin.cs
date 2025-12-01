@@ -102,16 +102,18 @@ namespace ReMakePlacePlugin
                 OnTaskException = (task, ex, ref @continue, ref abort) =>
                 {
                     LogError($"Error during dyeing task '{task.Name}'.");
+                    TaskManager?.Abort();
                     DyeAllItems();
                 },
                 OnTaskTimeout = (task, ref remainingTimeMs) =>
                 {
                     LogError($"Timeout during dyeing task '{task.Name}'.");
+                    TaskManager?.Abort();
                     DyeAllItems();
                 },
-                AbortOnError = true,
-                AbortOnTimeout = true,
-                TimeLimitMS = 5000,
+                AbortOnError = false,
+                AbortOnTimeout = false,
+                TimeLimitMS = 2000,
             };
 
             TaskManager = new TaskManager(config);
@@ -458,7 +460,6 @@ namespace ReMakePlacePlugin
 
         unsafe public static void SetItemPosition(HousingItem rowItem)
         {
-
             if (!Memory.Instance.CanEditItem())
             {
                 LogError("Unable to set position outside of Rotate Layout mode");
@@ -580,7 +581,8 @@ namespace ReMakePlacePlugin
                 {
                     if (IsSelectedFloor(houseItem.Y) && !houseItem.DyeMatch)
                     {
-                        toBeDyed.Add(houseItem);
+                        if (houseItem.Stain != 0)
+                            toBeDyed.Add(houseItem);
                     }
                 }
             }
@@ -591,7 +593,8 @@ namespace ReMakePlacePlugin
                 {
                     if (!houseItem.DyeMatch)
                     {
-                        toBeDyed.Add(houseItem);
+                        if (houseItem.Stain != 0)
+                            toBeDyed.Add(houseItem);
                     }
                 }
             }
@@ -690,8 +693,6 @@ namespace ReMakePlacePlugin
                 return;
             }
 
-            Log($"Dyeing {rowItem.Name}");
-
             if (RareStains.RareStainIds.Contains(rowItem.Stain) && !Config.UseRareStains)
             {
                 Log($"{rowItem.Name} is dyed with a rare dye, skipping it");
@@ -707,12 +708,13 @@ namespace ReMakePlacePlugin
             }
 
             Stain stain;
-            if (!DalamudApi.DataManager.GetExcelSheet<Stain>().TryGetRow(rowItem.Stain, out stain))
+            if (!DalamudApi.DataManager.GetExcelSheet<Stain>().TryGetRow(rowItem.Stain, out stain) || stain.RowId == 0)
             {
-                LogError($"Invalid stain ID {rowItem.Stain} for item {rowItem.Name}");
                 DyeAllItems();
                 return;
             }
+
+            Log($"Dyeing {rowItem.Name}");
 
             // Check if dye addon is open, if yes close it, if not continue
             TaskManager.Enqueue(() =>
@@ -866,7 +868,6 @@ namespace ReMakePlacePlugin
             addonPtr = addon;
             return true;
         }
-
 
         public bool MatchItem(HousingItem item, uint itemKey)
         {
