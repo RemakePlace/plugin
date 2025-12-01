@@ -200,7 +200,7 @@ namespace ReMakePlacePlugin.Gui
                     if (CheckModeForApplyDyes()) { Plugin.MatchLayout(); }
                     Config.ResetRecord();
                     if (CheckModeForApplyDyes()) { Plugin.ApplyDyes(); }
-                    else { Log($"Dyes cannot be applies outside of Furnishing Color mode."); }
+                    else { Log($"Dyes cannot be applied outside of Furnishing Color mode."); }
                 }
                 catch (Exception e)
                 {
