@@ -2,7 +2,9 @@
 using Dalamud.Interface;
 using Dalamud.Interface.ImGuiFileDialog;
 using Dalamud.Interface.Utility;
+using Dalamud.Interface.Utility.Raii;
 using Dalamud.Utility;
+using ECommons.MathHelpers;
 using Lumina.Excel.Sheets;
 using ReMakePlacePlugin.Objects;
 using System;
@@ -55,10 +57,23 @@ namespace ReMakePlacePlugin.Gui
 
             Vector2 leftPanelSize = new Vector2(140 * ImGuiHelpers.GlobalScale, ImGui.GetWindowHeight() - 30 * ImGuiHelpers.GlobalScale);
 
-            ImGui.BeginChild("LeftFloat", leftPanelSize);
-            DrawMainMenu();
-            DrawGeneralSettings();
-            ImGui.EndChild(); ImGui.SameLine();
+            using (ImRaii.Child("LeftFloat", leftPanelSize, false, ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse))
+            {
+                var availX = ImGui.GetContentRegionAvail().X;
+                string pluginDir = DalamudApi.PluginInterface.AssemblyLocation.DirectoryName!;
+                var imagePath = Path.Combine(pluginDir, "images/icon.png");
+                var image = DalamudApi.TextureProvider.GetFromFile(imagePath).GetWrapOrDefault();
+                if (image != null)
+                    ImGui.Image(image.Handle, availX.ToVector2());
+
+                using (ImRaii.Child("MenuAndSettings", ImGui.GetContentRegionAvail()))
+                {
+                    DrawMainMenu();
+                    DrawGeneralSettings();
+                }
+            }
+
+            ImGui.SameLine();
 
             ImGui.BeginChild("RightFloat", border: true);
             ImGui.Text($"Current file location:"); ImGui.SameLine();
@@ -349,16 +364,7 @@ namespace ReMakePlacePlugin.Gui
 
         unsafe private void DrawMainMenu()
         {
-            Vector2 menuDimensions = new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetContentRegionAvail().X + ImGui.GetFrameHeightWithSpacing() * 5);
-            ImGui.BeginChild("MainMenu", menuDimensions, flags: ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
-
-            string pluginDir = DalamudApi.PluginInterface.AssemblyLocation.DirectoryName!;
-            var imagePath = Path.Combine(pluginDir, "images/icon.png");
-            var image = DalamudApi.TextureProvider.GetFromFile(imagePath).GetWrapOrDefault();
-            if (image != null)
-            {
-                ImGui.Image(image.Handle, new Vector2(menuDimensions.X, menuDimensions.X));
-            }
+            Vector2 menuDimensions = ImGui.GetContentRegionAvail();
 
             DrawMainMenuButton($"Open File", () =>
             {
@@ -433,8 +439,6 @@ namespace ReMakePlacePlugin.Gui
                 Config.SaveLocation.IsNullOrEmpty(),
                 "Save layout to current file location",
                 menuDimensions.X);
-
-            ImGui.EndChild();
         }
 
         private void DrawMainMenuButton(string label, System.Action onClick, bool disabled = false, string? tooltip = null, float width = 100)
@@ -679,7 +683,9 @@ namespace ReMakePlacePlugin.Gui
 
             for (int i = 0; i < itemList.Count(); i++)
             {
-                var playerPos = DalamudApi.ClientState.LocalPlayer.Position;
+                var player = DalamudApi.ObjectTable.LocalPlayer;
+                if (player == null) return;
+                var playerPos = player.Position;
                 var housingItem = itemList[i];
 
                 if (housingItem.ItemStruct == IntPtr.Zero) continue;
