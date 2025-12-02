@@ -1,7 +1,7 @@
-﻿<Project Sdk="Dalamud.NET.Sdk/13.0.0">
-
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Dalamud.NET.Sdk/13.1.0">
 	<PropertyGroup>
-		<PluginVersion>7.3.2</PluginVersion>
+		<PluginVersion>7.3.3</PluginVersion>
 		<TargetFramework>net9.0-windows</TargetFramework>
 		<LangVersion>latest</LangVersion>
 		<AssemblyTitle>ReMakePlacePlugin</AssemblyTitle>
@@ -35,38 +35,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="DalamudPackager" Version="13.0.0" />
-	  <PackageReference Include="Lumina.Excel" Version="7.3.1" />
-	</ItemGroup>
-
-
-	<ItemGroup>
-		<Reference Include="Newtonsoft.Json">
-			<HintPath>$(DalamudLibPath)Newtonsoft.Json.dll</HintPath>
-			<Private>False</Private>
-		</Reference>
-		<Reference Include="Dalamud">
-			<HintPath>$(DalamudLibPath)Dalamud.dll</HintPath>
-			<Private>False</Private>
-		</Reference>
-		<Reference Include="FFXIVClientStructs">
-			<HintPath>$(DalamudLibPath)FFXIVClientStructs.dll</HintPath>
-			<Private>False</Private>
-		</Reference>
-		<Reference Include="Lumina">
-			<HintPath>$(DalamudLibPath)Lumina.dll</HintPath>
-			<Private>false</Private>
-		</Reference>
-		<Reference Include="Lumina.Excel">
-			<HintPath>$(DalamudLibPath)Lumina.Excel.dll</HintPath>
-			<Private>false</Private>
-		</Reference>
-	</ItemGroup>
-	<ItemGroup>
 		<ContentWithTargetPath Include="Images\icon.png">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 			<TargetPath>Images\icon.png</TargetPath>
 		</ContentWithTargetPath>
 	</ItemGroup>
 
+	<ItemGroup>
+	  <PackageReference Include="ECommons" Version="3.0.1.28" />
+	</ItemGroup>
 </Project>

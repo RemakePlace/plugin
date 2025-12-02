@@ -1,39 +1,40 @@
-﻿using System;
+﻿using Dalamud.Interface.Windowing;
+using ECommons.DalamudServices;
 using ReMakePlacePlugin.Gui;
+using System;
 
-namespace ReMakePlacePlugin
+namespace ReMakePlacePlugin;
+
+public class PluginUi : IDisposable
 {
-    public class PluginUi : IDisposable
+    private readonly ReMakePlacePlugin _plugin;
+
+    public readonly WindowSystem WindowSystem = new("ReMakePlace");
+    public ConfigurationWindow ConfigWindow { get; }
+
+    public PluginUi(ReMakePlacePlugin plugin)
     {
-        private readonly ReMakePlacePlugin _plugin;
-        public ConfigurationWindow ConfigWindow { get; }
+        _plugin = plugin;
 
-        public PluginUi(ReMakePlacePlugin plugin)
-        {
-            ConfigWindow = new ConfigurationWindow(plugin);
+        ConfigWindow = new ConfigurationWindow(plugin);
 
-            _plugin = plugin;
-            DalamudApi.PluginInterface.UiBuilder.Draw += Draw;
-            DalamudApi.PluginInterface.UiBuilder.OpenConfigUi += OnOpenConfigUi;
-            DalamudApi.PluginInterface.UiBuilder.OpenMainUi += OnOpenConfigUi;
-        }
+        WindowSystem.AddWindow(ConfigWindow);
 
-        private void Draw()
-        {
-            ConfigWindow.Draw();
-        }
-        private void OnOpenConfigUi()
-        {
-            ConfigWindow.Visible = true;
-            ConfigWindow.CanUpload = false;
-            ConfigWindow.CanImport = false;
-        }
+        Svc.PluginInterface.UiBuilder.Draw += WindowSystem.Draw;
+        Svc.PluginInterface.UiBuilder.OpenConfigUi += ToggleConfigUi;
+        Svc.PluginInterface.UiBuilder.OpenMainUi += ToggleConfigUi;
+    }
 
-        public void Dispose()
-        {
-            DalamudApi.PluginInterface.UiBuilder.Draw -= Draw;
-            DalamudApi.PluginInterface.UiBuilder.OpenConfigUi -= OnOpenConfigUi;
-            DalamudApi.PluginInterface.UiBuilder.OpenMainUi -= OnOpenConfigUi;
-        }
+    private void ToggleConfigUi() => ConfigWindow.Toggle();
+
+    public void Dispose()
+    {
+        Svc.PluginInterface.UiBuilder.Draw -= WindowSystem.Draw;
+        Svc.PluginInterface.UiBuilder.OpenConfigUi -= ToggleConfigUi;
+        Svc.PluginInterface.UiBuilder.OpenMainUi -= ToggleConfigUi;
+
+        WindowSystem.RemoveAllWindows();
+
+        ConfigWindow.Dispose();
     }
 }
