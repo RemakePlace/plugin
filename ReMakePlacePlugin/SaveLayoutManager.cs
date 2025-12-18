@@ -202,7 +202,7 @@ public class SaveLayoutManager
 
         foreach (var stain in StainList)
         {
-            if (stain.Unknown2)
+            if (stain.IsHousingApplicable)
             {
                 ColorList.Add((Color.FromArgb((int)stain.Color), stain.RowId));
             }
