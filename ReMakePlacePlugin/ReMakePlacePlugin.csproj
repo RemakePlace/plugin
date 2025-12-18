@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project Sdk="Dalamud.NET.Sdk/13.1.0">
+<Project Sdk="Dalamud.NET.Sdk/14.0.0">
 	<PropertyGroup>
 		<PluginVersion>7.3.3</PluginVersion>
-		<LangVersion>latest</LangVersion>
+		<LangVersion>14</LangVersion>
 		<AssemblyTitle>ReMakePlacePlugin</AssemblyTitle>
 		<Product>ReMakePlacePlugin</Product>
 		<Version>$(PluginVersion)</Version>
@@ -41,6 +41,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="ECommons" Version="3.0.1.28" />
+	  <PackageReference Include="ECommons" Version="3.1.0.2" />
 	</ItemGroup>
 </Project>
