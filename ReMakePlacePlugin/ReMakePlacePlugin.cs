@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using static ReMakePlacePlugin.Memory;
 using HousingFurniture = Lumina.Excel.Sheets.HousingFurniture;
@@ -122,7 +123,7 @@ public class ReMakePlacePlugin : IDalamudPlugin
 
         TaskManager = new TaskManager(taskManagerConfig);
 
-        Svc.Log.Info("ReMakePlace Plugin v7.3.2 initialized");
+        Svc.Log.Info($"ReMakePlace Plugin v{Assembly.GetExecutingAssembly().GetName().Version} initialized");
     }
 
     public unsafe void Initialize()
@@ -594,10 +595,9 @@ public class ReMakePlacePlugin : IDalamudPlugin
             toBeDyed = new List<HousingItem>();
             foreach (var houseItem in InteriorItemList)
             {
-                if (IsSelectedFloor(houseItem.Y) && !houseItem.DyeMatch)
+                if (IsSelectedFloor(houseItem.Y) && !houseItem.DyeMatch && houseItem.MaterialItemKey == 0)
                 {
-                    if (houseItem.Stain != 0)
-                        toBeDyed.Add(houseItem);
+                    toBeDyed.Add(houseItem);
                 }
             }
         }
@@ -606,10 +606,9 @@ public class ReMakePlacePlugin : IDalamudPlugin
             toBeDyed = new List<HousingItem>();
             foreach (var houseItem in ExteriorItemList)
             {
-                if (!houseItem.DyeMatch)
+                if (!houseItem.DyeMatch && houseItem.MaterialItemKey == 0)
                 {
-                    if (houseItem.Stain != 0)
-                        toBeDyed.Add(houseItem);
+                    toBeDyed.Add(houseItem);
                 }
             }
         }
@@ -723,7 +722,7 @@ public class ReMakePlacePlugin : IDalamudPlugin
         }
 
         Stain stain;
-        if (!Svc.Data.GetExcelSheet<Stain>().TryGetRow(rowItem.Stain, out stain) || stain.RowId == 0)
+        if (!Svc.Data.GetExcelSheet<Stain>().TryGetRow(rowItem.Stain, out stain))
         {
             DyeAllItems();
             return;
