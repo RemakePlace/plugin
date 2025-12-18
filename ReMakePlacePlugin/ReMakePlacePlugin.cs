@@ -570,11 +570,6 @@ public class ReMakePlacePlugin : IDalamudPlugin
         }
     }
 
-    public unsafe void PlaceDownItems()
-    {
-
-    }
-
     public void ApplyDyes()
     {
         if (CurrentlyDyeingItems)
@@ -595,7 +590,7 @@ public class ReMakePlacePlugin : IDalamudPlugin
             toBeDyed = new List<HousingItem>();
             foreach (var houseItem in InteriorItemList)
             {
-                if (IsSelectedFloor(houseItem.Y) && !houseItem.DyeMatch && houseItem.MaterialItemKey == 0)
+                if (IsSelectedFloor(houseItem.Y) && !houseItem.DyeMatch && !houseItem.IsMaterial)
                 {
                     toBeDyed.Add(houseItem);
                 }
@@ -606,7 +601,7 @@ public class ReMakePlacePlugin : IDalamudPlugin
             toBeDyed = new List<HousingItem>();
             foreach (var houseItem in ExteriorItemList)
             {
-                if (!houseItem.DyeMatch && houseItem.MaterialItemKey == 0)
+                if (!houseItem.DyeMatch && !houseItem.IsMaterial)
                 {
                     toBeDyed.Add(houseItem);
                 }
@@ -905,7 +900,6 @@ public class ReMakePlacePlugin : IDalamudPlugin
         if (matItemKey == 0) return true;
 
         return matItemKey == item.MaterialItemKey;
-
     }
 
     public unsafe void MatchLayout()
@@ -1256,6 +1250,7 @@ public class ReMakePlacePlugin : IDalamudPlugin
             {
                 ushort material = gameObject.Item->MaterialManager->MaterialSlot1;
                 housingItem.MaterialItemKey = HousingData.Instance.GetMaterialItemKey(item.RowId, material);
+                housingItem.IsMaterial = true;
             }
 
             InteriorItemList.Add(housingItem);

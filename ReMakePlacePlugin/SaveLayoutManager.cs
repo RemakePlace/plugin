@@ -273,6 +273,7 @@ public class SaveLayoutManager
         {
             var material = furniture.GetMaterial();
             houseItem.MaterialItemKey = material.itemId;
+            houseItem.IsMaterial = true;
         }
 
         return houseItem;
@@ -559,9 +560,7 @@ public class SaveLayoutManager
                     basicItem.itemId = gameObject.MaterialItemKey;
                     furniture.properties.Add("material", basicItem);
                 }
-
             }
-
 
             furnitureList.Add(furniture);
         }

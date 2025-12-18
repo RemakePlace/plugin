@@ -9,6 +9,7 @@ public class HousingItem
     public uint ItemKey;
     public byte Stain;
     public uint MaterialItemKey = 0;
+    public bool IsMaterial = false;
     public float X;
     public float Y;
     public float Z;
