@@ -2,7 +2,6 @@
 <Project Sdk="Dalamud.NET.Sdk/14.0.0">
 	<PropertyGroup>
 		<PluginVersion>7.4.0</PluginVersion>
-		<TargetFramework>net10.0-windows</TargetFramework>
 		<LangVersion>latest</LangVersion>
 		<AssemblyTitle>ReMakePlacePlugin</AssemblyTitle>
 		<Product>ReMakePlacePlugin</Product>
