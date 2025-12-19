@@ -15,8 +15,8 @@
     "remakeplace",
     "re-makeplace"
   ],
-  "DalamudApiLevel": 13,
-  "TestingDalamudApiLevel": 13,
+  "DalamudApiLevel": 14,
+  "TestingDalamudApiLevel": 14,
   "LoadPriority": 0,
   "IconUrl": "https://raw.githubusercontent.com/ReMakePlace/Plugin/master/icon.png",
   "IsTestingExclusive": "False",
