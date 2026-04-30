@@ -23,13 +23,13 @@ using System.Runtime.InteropServices;
 using static ReMakePlacePlugin.Memory;
 using HousingFurniture = Lumina.Excel.Sheets.HousingFurniture;
 using TaskManager = ECommons.Automation.NeoTaskManager.TaskManager;
-using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
+using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.AtkValueType;
 
 namespace ReMakePlacePlugin;
 
 public class ReMakePlacePlugin : IDalamudPlugin
 {
-    public string Name => $"ReMakePlace Plugin v{Assembly.GetExecutingAssembly().GetName().Version}";
+    public static string Name => $"ReMakePlace Plugin v{Assembly.GetExecutingAssembly().GetName().Version}";
 
     private string[] commandNames = ["remakeplace", "rmp", "makeplace"];
     public PluginUi Gui { get; private set; }
@@ -1334,7 +1334,7 @@ public class ReMakePlacePlugin : IDalamudPlugin
     }
 
 
-    private void TerritoryChanged(ushort e)
+    private void TerritoryChanged(uint e)
     {
         Config.DrawScreen = false;
         Config.Save();

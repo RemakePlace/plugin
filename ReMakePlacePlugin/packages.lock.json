@@ -4,21 +4,21 @@
     "net10.0-windows7.0": {
       "DalamudPackager": {
         "type": "Direct",
-        "requested": "[14.0.1, )",
-        "resolved": "14.0.1",
-        "contentHash": "y0WWyUE6dhpGdolK3iKgwys05/nZaVf4ZPtIjpLhJBZvHxkkiE23zYRo7K7uqAgoK/QvK5cqF6l3VG5AbgC6KA=="
+        "requested": "[15.0.0, )",
+        "resolved": "15.0.0",
+        "contentHash": "411vwC8/X8Z/sQ2TI6v3SvOn66xFPeOjFn3Zn+h0d3Ox2t1kFm66AhDvmx/qcMwVrR+Hidxj0dadpQ2dgyXMBQ=="
       },
       "DotNet.ReproducibleBuilds": {
         "type": "Direct",
-        "requested": "[1.2.39, )",
-        "resolved": "1.2.39",
-        "contentHash": "fcFN01tDTIQqDuTwr1jUQK/geofiwjG5DycJQOnC72i1SsLAk1ELe+apBOuZ11UMQG8YKFZG1FgvjZPbqHyatg=="
+        "requested": "[2.0.2, )",
+        "resolved": "2.0.2",
+        "contentHash": "VaHoEN6YHp0jXucxm67vfuRy8zo9ufiKSuaZ4ZudRi8xmWcEFMKxfCsg2nvYNvdISFTURDu+IHqADGh53+Bamw=="
       },
       "ECommons": {
         "type": "Direct",
-        "requested": "[3.1.0.13, )",
-        "resolved": "3.1.0.13",
-        "contentHash": "h7IvgmSOniX1hXorHogX43hDg7aoneyzWKrPEY9qbN3/By4oc1Z5MgQCeoSp1vloSbbf1MQg1h+/DyNtlpYv2A=="
+        "requested": "[3.2.0.6, )",
+        "resolved": "3.2.0.6",
+        "contentHash": "ZONTpNsOLTlX0OPhBU/mHK9EWqmxgc2ZPwZtmV0rucsNyARXjeNsaGC9bcumGPBVpICTQBqeg4V1iew3OdmGYQ=="
       }
     }
   }
