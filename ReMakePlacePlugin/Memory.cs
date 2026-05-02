@@ -169,6 +169,7 @@ public unsafe class Memory
         var activeObjList = (IntPtr)(mgr->Objects) - 0x08;
 
         var exteriorItems = Memory.GetContainer(InventoryType.HousingExteriorPlacedItems);
+        var exteriorItems2 = Memory.GetContainer(InventoryType.HousingExteriorPlacedItems2);
 
         for (int i = 0; i < exteriorItems->Size; i++)
         {
@@ -176,6 +177,26 @@ public unsafe class Memory
             if (item == null || item->ItemId == 0) continue;
 
             var itemInfoIndex = GetYardIndex(mgr->Plot, (byte)i);
+
+            var itemInfo = HousingObjectManager.GetItemInfo(mgr, itemInfoIndex);
+            if (itemInfo == null) continue;
+
+            var gameObj = (HousingGameObject*)GetObjectFromIndex(activeObjList, (uint)itemInfo->Index);
+            if (gameObj == null) gameObj = (HousingGameObject*)GetGameObject(objectListAddr, itemInfoIndex);
+
+            if (gameObj != null)
+            {
+                objects.Add(*gameObj);
+            }
+
+        }
+
+        for (int i = 0; i < exteriorItems2->Size; i++)
+        {
+            var item = exteriorItems2->GetInventorySlot(i);
+            if (item == null || item->ItemId == 0) continue;
+
+            var itemInfoIndex = GetYardIndex(mgr->Plot, (byte)(i+40));
 
             var itemInfo = HousingObjectManager.GetItemInfo(mgr, itemInfoIndex);
             if (itemInfo == null) continue;

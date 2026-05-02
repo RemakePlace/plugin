@@ -1107,6 +1107,7 @@ public class ReMakePlacePlugin : IDalamudPlugin
         var activeObjList = (IntPtr)(mgr->Objects) - 0x08;
 
         var exteriorItems = Memory.GetContainer(InventoryType.HousingExteriorPlacedItems);
+        var exteriorItems2 = Memory.GetContainer(InventoryType.HousingExteriorPlacedItems2);
 
         GetPlotLocation();
 
@@ -1137,6 +1138,61 @@ public class ReMakePlacePlugin : IDalamudPlugin
             if (!Svc.Data.GetExcelSheet<Item>().TryGetRow(item->ItemId, out var itemRow)) continue;
 
             var itemInfoIndex = GetYardIndex(mgr->Plot, (byte)i);
+
+            var itemInfo = HousingObjectManager.GetItemInfo(mgr, itemInfoIndex);
+            if (itemInfo == null)
+            {
+                continue;
+            }
+
+            var location = new Vector3(itemInfo->Position.X, itemInfo->Position.Y, itemInfo->Position.Z);
+
+            var newLocation = Vector3.Transform(location - PlotLocation.ToVector(), rotateVector);
+
+            var housingItem = new HousingItem(
+                itemRow,
+                item->Stains[0],
+                newLocation.X,
+                newLocation.Y,
+                newLocation.Z,
+                itemInfo->Rotation + PlotLocation.rotation
+            );
+
+            var gameObj = (HousingGameObject*)GetObjectFromIndex(activeObjList, (uint)itemInfo->Index);
+
+            if (gameObj == null)
+            {
+                gameObj = (HousingGameObject*)GetGameObject(objectListAddr, itemInfoIndex);
+
+                if (gameObj != null)
+                {
+
+                    location = new Vector3(gameObj->X, gameObj->Y, gameObj->Z);
+
+                    newLocation = Vector3.Transform(location - PlotLocation.ToVector(), rotateVector);
+
+                    housingItem.X = newLocation.X;
+                    housingItem.Y = newLocation.Y;
+                    housingItem.Z = newLocation.Z;
+                }
+            }
+
+            if (gameObj != null)
+            {
+                housingItem.ItemStruct = (IntPtr)gameObj->Item;
+            }
+
+            ExteriorItemList.Add(housingItem);
+        }
+
+        for (int i = 0; i < exteriorItems2->Size; i++)
+        {
+            var item = exteriorItems2->GetInventorySlot(i);
+            if (item == null || item->ItemId == 0) continue;
+
+            if (!Svc.Data.GetExcelSheet<Item>().TryGetRow(item->ItemId, out var itemRow)) continue;
+
+            var itemInfoIndex = GetYardIndex(mgr->Plot, (byte)(i+40));
 
             var itemInfo = HousingObjectManager.GetItemInfo(mgr, itemInfoIndex);
             if (itemInfo == null)
