@@ -72,7 +72,7 @@ public class PreviewManager : IAsyncDisposable
             string materialPath = GetMaterialPath(materialItem);
             if (materialPath != string.Empty)
             {
-                Add(new SharedGroup(path)
+                Add(new SharedGroup(path, _cts.Token)
                 {
                     MaterialPath = materialPath,
                     Position = position,
@@ -86,7 +86,7 @@ public class PreviewManager : IAsyncDisposable
         
         if (stain != 0 && Svc.Data.GetExcelSheet<Stain>().TryGetRow(stain, out var row))
         {
-            Add(new SharedGroup(path)
+            Add(new SharedGroup(path, _cts.Token)
             {
                 Color = Utils.StainToVector4(row.Color),
                 Position = position,
@@ -96,7 +96,7 @@ public class PreviewManager : IAsyncDisposable
         }
         else
         {
-            Add(new SharedGroup(path)
+            Add(new SharedGroup(path, _cts.Token)
             {
                 Position = position,
                 Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitY, rotation),
