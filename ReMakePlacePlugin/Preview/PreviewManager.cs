@@ -28,10 +28,7 @@ public class PreviewManager : IAsyncDisposable
         Svc.ClientState.ZoneInit += OnZoneInit;
     }
 
-    private void OnZoneInit(ZoneInitEventArgs obj)
-    {
-        throw new NotImplementedException();
-    }
+    private void OnZoneInit(ZoneInitEventArgs obj) => Task.Run(() => Clear());
     
     /// <summary>
     /// Toggles the current furniture's visibility while retaining player interaction.

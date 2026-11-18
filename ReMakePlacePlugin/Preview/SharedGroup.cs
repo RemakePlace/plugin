@@ -9,6 +9,7 @@ using FFXIVClientStructs.FFXIV.Client.Graphics;
 using FFXIVClientStructs.FFXIV.Client.Graphics.Scene;
 using FFXIVClientStructs.FFXIV.Client.LayoutEngine;
 using FFXIVClientStructs.FFXIV.Client.LayoutEngine.Group;
+using FFXIVClientStructs.FFXIV.Client.LayoutEngine.Layer;
 using FFXIVClientStructs.FFXIV.Client.LayoutEngine.Node;
 using FFXIVClientStructs.FFXIV.Client.System.Memory;
 using FFXIVClientStructs.Interop;
@@ -131,6 +132,13 @@ public class SharedGroup : IDisposable
         {
             if (ptr.IsNull) continue;
             ILayoutInstance* instance = ptr.Value->Instance;
+
+            // Kill the chairs (and beds)! Just in case. For some reason you cant sit in them without this anyway- but I remember that being different.
+            if (instance->Id.Type == InstanceType.ChairMarker)
+            {
+                instance->SetActive(false);
+            }
+            
             var graphics = (BgObject*)instance->GetGraphics();
             if (graphics == null) continue;
             graphics->UpdateCulling();
