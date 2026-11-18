@@ -4,6 +4,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using Dalamud.Game.ClientState;
 using ECommons.DalamudServices;
+using FFXIVClientStructs.FFXIV.Client.Game;
+using FFXIVClientStructs.FFXIV.Client.Game.Object;
+using FFXIVClientStructs.FFXIV.Client.LayoutEngine.Group;
+using FFXIVClientStructs.Interop;
+using FFXIVClientStructs.STD;
 
 namespace ReMakePlacePlugin.Preview;
 
@@ -20,6 +25,33 @@ public class PreviewManager : IAsyncDisposable
     private void OnZoneInit(ZoneInitEventArgs obj)
     {
         throw new NotImplementedException();
+    }
+    
+    /// <summary>
+    /// Toggles the current furniture's visibility while retaining player interaction.
+    /// </summary>
+    /// <param name="enabled">Whether the furniture should be visible</param>
+    public static unsafe void ToggleRealFurniture(bool enabled)
+    {
+        HousingManager* man = HousingManager.Instance();
+        if (man == null) return;
+
+        StdVector<Pointer<HousingFurniture>> furnVector = man->GetFurnitureManager()->FurnitureVector;
+        Span<Pointer<GameObject>> objArray = man->GetFurnitureManager()->ObjectManager.ObjectArray.Objects;
+        foreach (Pointer<HousingFurniture> ptr in furnVector)
+        {
+            if (ptr.IsNull) continue;
+            
+            int index = ptr.Value->Index;
+            var obj = (HousingObject*)objArray[index].Value;
+            if (obj == null) continue;
+
+            SharedGroupLayoutInstance* group = obj->SharedGroupLayoutInstance;
+            if (group == null) continue;
+            
+            group->SetActive(enabled);
+            group->SetColliderActive(true); // cool that this works :D
+        }
     }
 
     public SharedGroup this[uint id] => Furniture[id];
