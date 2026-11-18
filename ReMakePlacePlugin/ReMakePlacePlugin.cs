@@ -20,9 +20,11 @@ using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using ReMakePlacePlugin.Preview;
 using static ReMakePlacePlugin.Memory;
 using AtkValueType = FFXIVClientStructs.FFXIV.Component.GUI.AtkValueType;
 using HousingFurniture = Lumina.Excel.Sheets.HousingFurniture;
+using Task = System.Threading.Tasks.Task;
 using TaskManager = ECommons.Automation.NeoTaskManager.TaskManager;
 
 namespace ReMakePlacePlugin;
@@ -53,6 +55,8 @@ public class ReMakePlacePlugin : IDalamudPlugin
 
     public static bool CurrentlyDyeingItems = false;
 
+    public static bool CurrentlyPreviewing = false;
+
     public static bool OriginalPlaceAnywhere = false;
 
     public static bool ApplyChange = false;
@@ -75,6 +79,7 @@ public class ReMakePlacePlugin : IDalamudPlugin
 
     private TaskManager TaskManager;
 
+    public PreviewManager PreviewManager { get; private set; } = null;
     private FrameworkQueue FrameworkQueue;
 
     public ReMakePlacePlugin(IDalamudPluginInterface pi)
@@ -123,6 +128,7 @@ public class ReMakePlacePlugin : IDalamudPlugin
         TaskManager = new TaskManager(taskManagerConfig);
         
         FrameworkQueue = new FrameworkQueue();
+        PreviewManager = new PreviewManager();
 
         Svc.Log.Info($"ReMakePlace Plugin v{Assembly.GetExecutingAssembly().GetName().Version} initialized");
     }
@@ -150,6 +156,7 @@ public class ReMakePlacePlugin : IDalamudPlugin
 
     public void Dispose()
     {
+        Task.Run(() => PreviewManager.DisposeAsync());
         Gui?.Dispose();
 
         Svc.ClientState.TerritoryChanged -= TerritoryChanged;
@@ -1079,6 +1086,25 @@ public class ReMakePlacePlugin : IDalamudPlugin
 
         }
 
+    }
+
+    /// <summary>
+    /// Preview all the items in the current housing layout.
+    /// </summary>
+    public void PreviewItems()
+    {
+        if (Memory.Instance.GetCurrentTerritory() == HousingArea.Indoors)
+        {
+            var queue = new Queue<HousingItem>(InteriorItemList);
+            PreviewManager.ToggleRealFurniture(false);
+            Svc.Framework.RunOnTick(() => PreviewManager.PreviewInteriorItems(queue));
+        }
+        else if (Memory.Instance.GetCurrentTerritory() == HousingArea.Outdoors)
+        {
+            GetPlotLocation(); // update current plot
+            var queue = new Queue<HousingItem>(ExteriorItemList);
+            Svc.Framework.RunOnTick(() => PreviewManager.PreviewExteriorItems(queue));
+        }
     }
 
     public unsafe void GetPlotLocation()

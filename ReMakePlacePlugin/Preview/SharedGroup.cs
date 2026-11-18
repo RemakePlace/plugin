@@ -40,6 +40,7 @@ public class SharedGroup : IDisposable
     }
 
     public string Path { get; init; } = string.Empty;
+    public string MaterialPath { get; set; } = string.Empty;
 
     public SharedGroup(string path, CancellationToken token = new())
     {
@@ -101,6 +102,10 @@ public class SharedGroup : IDisposable
     private void OnLoad()
     {
         UpdateTransform();
+        
+        if (!MaterialPath.IsNullOrEmpty())
+            SetMaterial(MaterialPath);
+        
         Svc.Framework.RunOnTick(() => FrameworkQueue.Enqueue(ApplyStainTask), delayTicks: 1, cancellationToken: Token);
     }
 
@@ -120,6 +125,7 @@ public class SharedGroup : IDisposable
         transform->Scale = Scale;
         
         Data.Value->SetTransformImpl(transform);
+        Data.Value->SetColliderActive(false);
 
         foreach (Pointer<ChildNodeInstance> ptr in Data.Value->Instances.Instances)
         {
@@ -181,6 +187,37 @@ public class SharedGroup : IDisposable
             if (graphics == null) continue;
             graphics->SetTransparency(transparency);
         }
+    }
+
+    // for some reason necessary, using ->GetGraphics on SGLs just doesnt work.
+    private unsafe Pointer<BgObject> GetGraphics()
+    {
+        foreach (Pointer<ChildNodeInstance> ptr in Data.Value->Instances.Instances)
+        {
+            if (ptr.Value == null) continue;
+            ILayoutInstance* instance = ptr.Value->Instance;
+            var graphics = (BgObject*)instance->GetGraphics();
+            if (graphics == null) continue;
+            return graphics;
+        }
+
+        return null;
+    }
+
+    public unsafe void SetMaterial(string path)
+    {
+        Svc.Log.Verbose($"Attempting to set material {path}");
+        
+        if (Data.IsNull) return;
+        Pointer<BgObject> graphics = GetGraphics();
+
+        if (graphics.IsNull) return;
+        
+        BgObjectStainBuffer* stain = graphics.Value->StainBuffer;
+        if (stain is null) return;
+        
+        Svc.Log.Verbose($"Setting material {path}");
+        stain->SetCustomMaterialResource(path);
     }
 
     public unsafe void Dispose()

@@ -15,6 +15,7 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
+using ReMakePlacePlugin.Preview;
 using static ReMakePlacePlugin.Gui.UiHelpers;
 using static ReMakePlacePlugin.ReMakePlacePlugin;
 
@@ -168,6 +169,12 @@ public class ConfigurationWindow : Window, IDisposable
         return true;
     }
 
+    private bool CheckModeForPreview()
+    {
+        //TODO: Check if in correctly sized house
+        return true;
+    }
+
     private void SaveLayoutToFile()
     {
         if (!CheckModeForSave()) return;
@@ -231,6 +238,24 @@ public class ConfigurationWindow : Window, IDisposable
             {
                 LogError($"Apply Dyes Error: {e.Message}", e.StackTrace);
             }
+        }
+    }
+
+    private void ApplyPreviewFromFile()
+    {
+        if (Config.SaveLocation.IsNullOrEmpty()) return;
+
+        try
+        {
+            SaveLayoutManager.ImportLayout(Config.SaveLocation);
+
+            if (!CheckModeForPreview()) return;
+            Plugin.PreviewItems();
+            CurrentlyPreviewing = true;
+        }
+        catch (Exception e)
+        {
+            Svc.Log.Error($"Apply Preview Error: {e.Message}", e.StackTrace);
         }
     }
 
@@ -419,6 +444,21 @@ public class ConfigurationWindow : Window, IDisposable
         false,
         "Select a file to open",
         menuDimensions.X);
+        
+        DrawMainMenuButton(CurrentlyPreviewing ? "Stop Previewing" : "Preview", () =>
+        {
+            if (CurrentlyPreviewing)
+            {
+                Svc.Framework.Run(() => Plugin.PreviewManager.Clear());
+                CurrentlyPreviewing = false;
+                if (Memory.Instance.GetCurrentTerritory() == Memory.HousingArea.Indoors)
+                    PreviewManager.ToggleRealFurniture(true);
+            }
+            else
+            {
+                ApplyPreviewFromFile();
+            }
+        }, false, "Preview the layout!", menuDimensions.X);
 
         DrawMainMenuButton("Apply", () =>
         {
