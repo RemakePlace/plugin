@@ -28,7 +28,11 @@ public class PreviewManager : IAsyncDisposable
         Svc.ClientState.ZoneInit += OnZoneInit;
     }
 
-    private void OnZoneInit(ZoneInitEventArgs obj) => Task.Run(() => Clear());
+    private void OnZoneInit(ZoneInitEventArgs obj)
+    {
+        ReMakePlacePlugin.CurrentlyPreviewing = false;
+        Task.Run(() => Clear());
+    }
     
     /// <summary>
     /// Toggles the current furniture's visibility while retaining player interaction.
