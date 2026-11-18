@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.InteropServices;
-
+using ReMakePlacePlugin.Preview;
 using static ReMakePlacePlugin.ReMakePlacePlugin;
 
 namespace ReMakePlacePlugin;
@@ -31,6 +31,8 @@ public unsafe class Memory
     public unsafe HousingObjectManager* CurrentManager => HousingModule->currentTerritory;
     public unsafe HousingStructure* HousingStructure => LayoutWorld->HousingStruct;
 
+    public static SharedGroupLayoutFunctions SharedGroupLayoutFunctions { get; private set; } = null!;
+
     private Memory()
     {
         try
@@ -41,6 +43,8 @@ public unsafe class Memory
 
             HousingModulePtr = Svc.SigScanner.GetStaticAddressFromSig("48 8B 05 ?? ?? ?? ?? 8B 52");
             LayoutWorldPtr = Svc.SigScanner.GetStaticAddressFromSig("48 8B D1 48 8B 0D ?? ?? ?? ?? 48 85 C9 74 0A", 3);
+
+            SharedGroupLayoutFunctions = new SharedGroupLayoutFunctions();
         }
         catch (Exception e)
         {
