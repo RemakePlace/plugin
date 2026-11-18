@@ -21,7 +21,7 @@ namespace ReMakePlacePlugin.Preview;
 public class PreviewManager : IAsyncDisposable
 {
     public readonly Dictionary<uint, SharedGroup> Furniture = [];
-    private CancellationTokenSource cts = new();
+    private CancellationTokenSource _cts = new();
     
     public PreviewManager()
     {
@@ -59,7 +59,7 @@ public class PreviewManager : IAsyncDisposable
             group->SetColliderActive(true); // cool that this works :D
         }
     }
-    
+
     /// <summary>
     /// Spawns the furniture for the given path.
     /// </summary>
@@ -67,19 +67,27 @@ public class PreviewManager : IAsyncDisposable
     /// <param name="position">Position to spawn furniture</param>
     /// <param name="rotation">Rotation of the furniture</param>
     /// <param name="stain">RowId for the stain to use</param>
+    /// <param name="materialItem">The Item rowId for the material used (Wallpaper, paintings, etc.)</param>
     public void PreviewItem(string path, Vector3 position, float rotation, byte stain, uint materialItem)
     {
-        if (materialItem != 0 && Svc.Data.GetExcelSheet<Item>().TryGetRow(materialItem, out var materialRow) && materialRow.AdditionalData.TryGetValue<HousingInterior>(out var housingInterior))
+        if (materialItem != 0)
         {
-            Add(new SharedGroup(path)
+            string materialPath = GetMaterialPath(materialItem);
+            if (materialPath != string.Empty)
             {
-                MaterialPath = $"bgcommon/hou/dyna/mat/wl/{housingInterior.Unknown1:0000}/material/rom_wl_2{housingInterior.Unknown1:0000}a.mtrl",
-                Position = position,
-                Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitY, rotation),
-                Scale = Vector3.One
-            });
+                Add(new SharedGroup(path)
+                {
+                    MaterialPath = materialPath,
+                    Position = position,
+                    Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitY, rotation),
+                    Scale = Vector3.One
+                });
+
+                return;
+            }
         }
-        else if (stain != 0 && Svc.Data.GetExcelSheet<Stain>().TryGetRow(stain, out var row))
+        
+        if (stain != 0 && Svc.Data.GetExcelSheet<Stain>().TryGetRow(stain, out var row))
         {
             Add(new SharedGroup(path)
             {
@@ -98,6 +106,25 @@ public class PreviewManager : IAsyncDisposable
                 Scale = Vector3.One
             });
         }
+    }
+
+    private string GetMaterialPath(uint materialItem)
+    {
+        if (!Svc.Data.GetExcelSheet<Item>().TryGetRow(materialItem, out var materialRow)) return string.Empty;
+        
+        // 73 == Interior Wall
+        if (materialRow.ItemUICategory.RowId == 73 && materialRow.AdditionalData.TryGetValue<HousingInterior>(out var housingInterior))
+        {
+            return $"bgcommon/hou/dyna/mat/wl/{housingInterior.Unknown1:0000}/material/rom_wl_2{housingInterior.Unknown1:0000}a.mtrl";
+        }
+            
+        // 95 == Painting
+        if (materialRow.ItemUICategory.RowId == 95)
+        {
+            return $"bgcommon/hou/indoor/pic/ta/{materialRow.AdditionalData.RowId:0000}/material/pic_ta_2{materialRow.AdditionalData.RowId:0000}a.mtrl";
+        }
+
+        return string.Empty;
     }
 
     /// <summary>
@@ -165,8 +192,8 @@ public class PreviewManager : IAsyncDisposable
 
     public async Task Clear(bool disposing = false)
     {
-        await cts.CancelAsync();
-        cts.Dispose();
+        await _cts.CancelAsync();
+        _cts.Dispose();
         
         await Svc.Framework.Run(() =>
         {
@@ -185,7 +212,7 @@ public class PreviewManager : IAsyncDisposable
         
         Furniture.Clear();
         
-        if (!disposing) cts = new CancellationTokenSource();
+        if (!disposing) _cts = new CancellationTokenSource();
     }
 
     public async ValueTask DisposeAsync()
