@@ -18,7 +18,7 @@ using HousingFurniture = FFXIVClientStructs.FFXIV.Client.Game.HousingFurniture;
 
 namespace ReMakePlacePlugin.Preview;
 
-public class PreviewManager : IAsyncDisposable
+public class PreviewManager : IDisposable
 {
     public readonly Dictionary<uint, SharedGroup> Furniture = [];
     private CancellationTokenSource _cts = new();
@@ -191,35 +191,32 @@ public class PreviewManager : IAsyncDisposable
     public bool Remove(SharedGroup sharedGroup) => Remove(sharedGroup.Id, out _);
     public bool Remove(uint id, out SharedGroup? sharedGroup) => Furniture.Remove(id, out sharedGroup);
 
-    public async Task Clear(bool disposing = false)
+    public void Clear(bool disposing = false)
     {
-        await _cts.CancelAsync();
+        _cts.Cancel();
         _cts.Dispose();
         
-        await Svc.Framework.Run(() =>
+        foreach (var furn in Furniture.Values)
         {
-            foreach (var furn in Furniture.Values)
+            try
             {
-                try
-                {
-                    furn.Dispose();
-                }
-                catch (Exception e)
-                {
-                    Svc.Log.Error(e, "Error while disposing Shared Group");
-                }
-            } 
-        });
+                furn.Dispose();
+            }
+            catch (Exception e)
+            {
+                Svc.Log.Error(e, "Error while disposing Shared Group");
+            }
+        } 
         
         Furniture.Clear();
         
         if (!disposing) _cts = new CancellationTokenSource();
     }
 
-    public async ValueTask DisposeAsync()
+    public void Dispose()
     {
         Svc.ClientState.ZoneInit -= OnZoneInit;
         ToggleRealFurniture(true);
-        await Clear(true);
+        Clear(true);
     }
 }

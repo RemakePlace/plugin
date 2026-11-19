@@ -156,7 +156,7 @@ public class ReMakePlacePlugin : IDalamudPlugin
 
     public void Dispose()
     {
-        Task.Run(() => PreviewManager.DisposeAsync());
+        PreviewManager.Dispose();
         Gui?.Dispose();
 
         Svc.ClientState.TerritoryChanged -= TerritoryChanged;

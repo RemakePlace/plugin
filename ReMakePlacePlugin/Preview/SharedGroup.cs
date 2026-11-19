@@ -74,6 +74,7 @@ public class SharedGroup : IDisposable
         {
             Memory.SharedGroupLayoutFunctions.Ctor(Data);
             Memory.SharedGroupLayoutFunctions.Init(Data, Path);
+            Data.Value->SetColliderActive(false);
             
             UpdateTransform();
             return true;
@@ -105,8 +106,9 @@ public class SharedGroup : IDisposable
         // If in the future there is an effort to make a local house editor, that will need to change.
     }
 
-    private void OnLoad()
+    private unsafe void OnLoad()
     {
+        Data.Value->SetColliderActive(true);
         UpdateTransform();
         
         if (!MaterialPath.IsNullOrEmpty())
