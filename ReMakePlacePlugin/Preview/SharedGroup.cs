@@ -141,7 +141,8 @@ public class SharedGroup : IDisposable
             // Kill the chairs (and beds)! Just in case. For some reason you cant sit in them without this anyway- but I remember that being different.
             if (instance->Id.Type == InstanceType.ChairMarker)
             {
-                instance->SetActive(false);
+                instance->Deinit();
+                instance->Dtor(0);
             }
             
             var graphics = (DrawObject*)instance->GetGraphics();
