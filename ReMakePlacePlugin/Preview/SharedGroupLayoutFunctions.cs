@@ -100,13 +100,13 @@ public unsafe class SharedGroupLayoutFunctions
     }
 
     /// <summary>
-    /// Loads extra material's onto an SGB. Namely; wallpapers, paintings, flowers, and fish prints.
+    /// Loads material's onto an SGB. Namely; wallpapers, paintings, flowers, and fish prints.
     /// </summary>
     /// <param name="self">The group to load onto</param>
     /// <param name="key">Key for the material, found via the VaseFlower sheet</param>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException"></exception>
-    public bool TryLoadExtraMaterial(SharedGroupLayoutInstance* self, ushort key)
+    public bool TryLoadMaterial(SharedGroupLayoutInstance* self, ushort key)
     {
         if (TryLoadMaterialInternal == null)
             throw new InvalidOperationException("LoadVaseFlower sig was not found!");

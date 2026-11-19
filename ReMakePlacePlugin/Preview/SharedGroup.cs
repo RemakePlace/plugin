@@ -10,13 +10,11 @@ using FFXIVClientStructs.FFXIV.Client.Graphics;
 using FFXIVClientStructs.FFXIV.Client.Graphics.Scene;
 using FFXIVClientStructs.FFXIV.Client.LayoutEngine;
 using FFXIVClientStructs.FFXIV.Client.LayoutEngine.Group;
-using FFXIVClientStructs.FFXIV.Client.LayoutEngine.Layer;
 using FFXIVClientStructs.FFXIV.Client.LayoutEngine.Node;
 using FFXIVClientStructs.FFXIV.Client.System.Memory;
 using FFXIVClientStructs.FFXIV.Common.Component.BGCollision;
 using FFXIVClientStructs.Interop;
 using ReMakePlacePlugin.Extensions;
-using ReMakePlacePlugin.Util;
 
 namespace ReMakePlacePlugin.Preview;
 
@@ -44,7 +42,6 @@ public class SharedGroup : IDisposable
     }
 
     public string Path { get; init; } = string.Empty;
-    public string MaterialPath { get; set; } = string.Empty;
     public ushort MaterialKey { get; set; } = 0;
 
     public SharedGroup(string path, CancellationToken token = new())
@@ -75,9 +72,7 @@ public class SharedGroup : IDisposable
         try
         {
             Memory.SharedGroupLayoutFunctions.Ctor(Data);
-            Memory.SharedGroupLayoutFunctions.Init(Data, Path);
-            Data.Value->SetColliderActive(false);
-            
+            Memory.SharedGroupLayoutFunctions.Init(Data, Path); 
             UpdateTransform();
             return true;
         }
@@ -93,35 +88,33 @@ public class SharedGroup : IDisposable
     {
         if (Token.IsCancellationRequested) return;
         if (Data.IsNull) throw new InvalidOperationException("Data is null");
-
+    
         bool loaded = IsLoaded();
-
+    
         while (!loaded)
         {
             if (Token.IsCancellationRequested) return;
             loaded = IsLoaded();
             await Task.Delay(16, Token).ConfigureAwait(false);
         }
-
+    
         await Svc.Framework.Run(OnLoad, Token);
         // abyeon: my wip local lib usually has an update task initiated here, but preview objects don't really need to be updated.
         // If in the future there is an effort to make a local house editor, that will need to change.
     }
 
-    private unsafe void OnLoad()
+    private void OnLoad()
     {
-        Data.Value->SetColliderActive(true);
         UpdateTransform();
         
-        if (!MaterialPath.IsNullOrEmpty()) SetMaterial(MaterialPath);
-        if (MaterialKey != 0) LoadExtraMaterial(MaterialKey);
+        if (MaterialKey != 0) LoadMaterial(MaterialKey);
         
         Svc.Framework.RunOnTick(() => ApplyStainTask(null!), delayTicks: 1, cancellationToken: Token);
     }
 
     private unsafe bool IsLoaded()
     {
-        return !Data.IsNull && Data.Value->IsPrimaryLoaded();
+        return !Data.IsNull && Data.Value->IsPrimaryReady();
     }
 
     public unsafe void UpdateTransform()
@@ -180,7 +173,6 @@ public class SharedGroup : IDisposable
     public void SetColor(Vector4? color)
     {
         if (Data == null || TrySetColor(color)) return;
-        // FrameworkQueue.Enqueue(ApplyStainTask);
         ApplyStainTask(null!);
     }
 
@@ -217,7 +209,6 @@ public class SharedGroup : IDisposable
         
         Svc.Log.Verbose($"Failed to apply stain, attempting again..");
         Svc.Framework.Update += ApplyStainTask;
-        // FrameworkQueue.Enqueue(ApplyStainTask);
     }
 
     public unsafe void SetTransparency(float transparency)
@@ -246,14 +237,14 @@ public class SharedGroup : IDisposable
 
         return null;
     }
-
-    public unsafe void SetMaterial(string path)
+    
+    public unsafe void SetCustomMaterial(string path)
     {
         Svc.Log.Verbose($"Attempting to set material {path}");
         
         if (Data.IsNull) return;
         Pointer<BgObject> graphics = GetGraphics();
-
+        
         if (graphics.IsNull) return;
         
         BgObjectStainBuffer* stain = graphics.Value->StainBuffer;
@@ -263,20 +254,20 @@ public class SharedGroup : IDisposable
         stain->SetCustomMaterialResource(path);
     }
     
-    public unsafe void LoadExtraMaterial(ushort key)
+    public unsafe void LoadMaterial(ushort key)
     {
-        Svc.Log.Verbose($"Attempting to load vase flower {key}");
+        Svc.Log.Verbose($"Attempting to load material {key}");
 
         if (Data.IsNull) return;
 
         try
         {
-            Memory.SharedGroupLayoutFunctions.TryLoadExtraMaterial(Data.Value, key);
-            Svc.Log.Verbose($"Successfully loaded vase flower {key}");
+            Memory.SharedGroupLayoutFunctions.TryLoadMaterial(Data.Value, key);
+            Svc.Log.Verbose($"Successfully loaded material {key}");
         }
         catch (Exception e)
         {
-            Svc.Log.Error($"Failed to load vase flower {key}", e);
+            Svc.Log.Error($"Failed to material flower {key}", e);
         }
     }
 
