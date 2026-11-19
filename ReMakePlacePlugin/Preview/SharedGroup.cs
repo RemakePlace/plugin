@@ -72,13 +72,16 @@ public class SharedGroup : IDisposable
         {
             Memory.SharedGroupLayoutFunctions.Ctor(Data);
             Memory.SharedGroupLayoutFunctions.Init(Data, Path);
+            
+            UpdateTransform();
+            return true;
         }
         catch (Exception e)
         {
             Svc.Log.Error($"Failed to create shared group {Path}: {e}");
         }
         
-        return true;
+        return false;
     }
 
     private async Task Init()
@@ -139,9 +142,10 @@ public class SharedGroup : IDisposable
                 instance->SetActive(false);
             }
             
-            var graphics = (BgObject*)instance->GetGraphics();
+            var graphics = (DrawObject*)instance->GetGraphics();
             if (graphics == null) continue;
             graphics->UpdateCulling();
+            graphics->UpdateRender();
         }
     }
     
