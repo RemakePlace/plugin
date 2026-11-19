@@ -152,11 +152,6 @@ public class HousingData
         return _stainDict.TryGetValue(id, out stain);
     }
 
-    public ushort GetPaintingMaterial(uint itemId)
-    {
-        return _painting.FirstOrDefault(p => p.Value == itemId).Key;
-    }
-
     public uint GetMaterialItemKey(uint itemId, ushort material)
     {
         if (material == 0) return 0;

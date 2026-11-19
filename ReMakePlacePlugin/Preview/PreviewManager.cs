@@ -4,16 +4,14 @@ using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 using Dalamud.Game.ClientState;
+using ECommons;
 using ECommons.DalamudServices;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using FFXIVClientStructs.FFXIV.Client.LayoutEngine.Group;
 using FFXIVClientStructs.Interop;
-using FFXIVClientStructs.STD;
-using Lumina.Excel;
 using Lumina.Excel.Sheets;
 using ReMakePlacePlugin.Objects;
-using ReMakePlacePlugin.Util;
 using HousingFurniture = FFXIVClientStructs.FFXIV.Client.Game.HousingFurniture;
 
 namespace ReMakePlacePlugin.Preview;
@@ -41,16 +39,21 @@ public class PreviewManager : IDisposable
     public static unsafe void ToggleRealFurniture(bool enabled)
     {
         HousingManager* man = HousingManager.Instance();
-        if (man == null) return;
+        if (man is null) return;
 
-        StdVector<Pointer<HousingFurniture>> furnVector = man->GetFurnitureManager()->FurnitureVector;
-        Span<Pointer<GameObject>> objArray = man->GetFurnitureManager()->ObjectManager.ObjectArray.Objects;
-        foreach (Pointer<HousingFurniture> ptr in furnVector)
+        HousingFurnitureManager* furnMan = man->GetFurnitureManager();
+        if (furnMan is null) return;
+        
+        ref var arr = ref furnMan->ObjectManager.ObjectArray;
+        int max = Math.Min(arr.Objects.Length, arr.ObjectCount);
+        foreach (Pointer<HousingFurniture> ptr in furnMan->FurnitureVector)
         {
             if (ptr.IsNull) continue;
             
             int index = ptr.Value->Index;
-            var obj = (HousingObject*)objArray[index].Value;
+            if ((uint)index >= (uint)max) continue;
+            
+            var obj = (HousingObject*)arr.Objects[index].Value;
             if (obj == null) continue;
 
             SharedGroupLayoutInstance* group = obj->SharedGroupLayoutInstance;
@@ -73,12 +76,12 @@ public class PreviewManager : IDisposable
     {
         if (materialItem != 0)
         {
-            string materialPath = GetMaterialPath(materialItem);
-            if (materialPath != string.Empty)
+            ushort materialKey = GetMaterialKey(materialItem);
+            if (materialKey != 0)
             {
                 Add(new SharedGroup(path, _cts.Token)
                 {
-                    MaterialPath = materialPath,
+                    MaterialKey = materialKey,
                     Position = position,
                     Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitY, rotation),
                     Scale = Vector3.One
@@ -97,36 +100,21 @@ public class PreviewManager : IDisposable
                 Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitY, rotation),
                 Scale = Vector3.One
             });
+
+            return;
         }
-        else
+
+        Add(new SharedGroup(path, _cts.Token)
         {
-            Add(new SharedGroup(path, _cts.Token)
-            {
-                Position = position,
-                Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitY, rotation),
-                Scale = Vector3.One
-            });
-        }
+            Position = position,
+            Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitY, rotation),
+            Scale = Vector3.One
+        });
     }
 
-    private string GetMaterialPath(uint materialItem)
+    private static ushort GetMaterialKey(uint materialItem)
     {
-        if (!Svc.Data.GetExcelSheet<Item>().TryGetRow(materialItem, out var materialRow)) return string.Empty;
-        
-        // 73 == Interior Wall
-        if (materialRow.ItemUICategory.RowId == 73 && materialRow.AdditionalData.TryGetValue<HousingInterior>(out var housingInterior))
-        {
-            return $"bgcommon/hou/dyna/mat/wl/{housingInterior.Unknown1:0000}/material/rom_wl_2{housingInterior.Unknown1:0000}a.mtrl";
-        }
-            
-        // 95 == Painting
-        if (materialRow.ItemUICategory.RowId == 95)
-        {
-            var painting = HousingData.Instance.GetPaintingMaterial(materialItem);
-            return $"bgcommon/hou/indoor/pic/ta/{painting:0000}/material/pic_ta_2{painting:0000}a.mtrl";
-        }
-
-        return string.Empty;
+        return Svc.Data.GetExcelSheet<VaseFlower>().FirstOr0(p => p.Item.RowId == materialItem).Unknown0;
     }
 
     /// <summary>

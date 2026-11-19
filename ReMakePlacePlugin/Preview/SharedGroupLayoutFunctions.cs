@@ -17,6 +17,7 @@ public unsafe class SharedGroupLayoutFunctions
     internal delegate SharedGroupLayoutInstance* CtorDelegate(SharedGroupLayoutInstance* self);
     internal delegate byte LoadSgbDelegate(SharedGroupLayoutInstance* self, byte* pathBytes);
     internal delegate LayerManager* LayerCtorDelegate(LayerManager* self, FFXIVClientStructs.FFXIV.Client.LayoutEngine.LayoutManager* owner);
+    internal delegate bool TryLoadMaterialDelegate(SharedGroupLayoutInstance* self, nint a2, ushort Key);
     
     [Signature("48 89 5C 24 ?? 48 89 74 24 ?? 57 48 83 EC ?? 33 F6 C7 41 ?? ?? ?? ?? ?? 48 8D 05 ?? ?? ?? ?? 48 89 71 ?? ?? ?? ?? 48 8B F9 48 89 71 ?? 89 71 ?? 48 89 71 ?? C7 41 ?? ?? ?? ?? ?? 48 83 C1 ?? E8 ?? ?? ?? ?? 48 89 77")]
     internal CtorDelegate? CtorInternal = null;
@@ -32,6 +33,9 @@ public unsafe class SharedGroupLayoutFunctions
     
     [Signature("40 53 48 83 EC ?? 48 8B D9 48 89 51 ?? C7 41 ?? ?? ?? ?? ?? 48 8D 05")]
     internal LayerCtorDelegate? LayerCtorInternal = null;
+    
+    [Signature("E8 ?? ?? ?? ?? 8B D7 45 33 C9")]
+    internal TryLoadMaterialDelegate? TryLoadMaterialInternal = null; // Hard to name, but uses the keys provided by VaseFlower sheet
     
     public SharedGroupLayoutFunctions()
     {
@@ -93,5 +97,20 @@ public unsafe class SharedGroupLayoutFunctions
             throw new InvalidOperationException("LayerCtorInternal sig was not found!");
         
         return LayerCtorInternal(self , owner);
+    }
+
+    /// <summary>
+    /// Loads extra material's onto an SGB. Namely; wallpapers, paintings, flowers, and fish prints.
+    /// </summary>
+    /// <param name="self">The group to load onto</param>
+    /// <param name="key">Key for the material, found via the VaseFlower sheet</param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    public bool TryLoadExtraMaterial(SharedGroupLayoutInstance* self, ushort key)
+    {
+        if (TryLoadMaterialInternal == null)
+            throw new InvalidOperationException("LoadVaseFlower sig was not found!");
+        
+        return TryLoadMaterialInternal(self, 0, key);
     }
 }

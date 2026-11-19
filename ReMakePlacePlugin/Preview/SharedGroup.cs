@@ -44,6 +44,7 @@ public class SharedGroup : IDisposable
 
     public string Path { get; init; } = string.Empty;
     public string MaterialPath { get; set; } = string.Empty;
+    public ushort MaterialKey { get; set; } = 0;
 
     public SharedGroup(string path, CancellationToken token = new())
     {
@@ -111,8 +112,8 @@ public class SharedGroup : IDisposable
         Data.Value->SetColliderActive(true);
         UpdateTransform();
         
-        if (!MaterialPath.IsNullOrEmpty())
-            SetMaterial(MaterialPath);
+        if (!MaterialPath.IsNullOrEmpty()) SetMaterial(MaterialPath);
+        if (MaterialKey != 0) LoadExtraMaterial(MaterialKey);
         
         Svc.Framework.RunOnTick(() => FrameworkQueue.Enqueue(ApplyStainTask), delayTicks: 1, cancellationToken: Token);
     }
@@ -251,6 +252,23 @@ public class SharedGroup : IDisposable
         
         Svc.Log.Verbose($"Setting material {path}");
         stain->SetCustomMaterialResource(path);
+    }
+    
+    public unsafe void LoadExtraMaterial(ushort key)
+    {
+        Svc.Log.Verbose($"Attempting to load vase flower {key}");
+
+        if (Data.IsNull) return;
+
+        try
+        {
+            Memory.SharedGroupLayoutFunctions.TryLoadExtraMaterial(Data.Value, key);
+            Svc.Log.Verbose($"Successfully loaded vase flower {key}");
+        }
+        catch (Exception e)
+        {
+            Svc.Log.Error($"Failed to load vase flower {key}", e);
+        }
     }
 
     public unsafe void Dispose()
