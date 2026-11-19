@@ -80,7 +80,6 @@ public class ReMakePlacePlugin : IDalamudPlugin
     private TaskManager TaskManager;
 
     public PreviewManager PreviewManager { get; private set; } = null;
-    private FrameworkQueue FrameworkQueue;
 
     public ReMakePlacePlugin(IDalamudPluginInterface pi)
     {
@@ -127,7 +126,6 @@ public class ReMakePlacePlugin : IDalamudPlugin
 
         TaskManager = new TaskManager(taskManagerConfig);
         
-        FrameworkQueue = new FrameworkQueue();
         PreviewManager = new PreviewManager();
 
         Svc.Log.Info($"ReMakePlace Plugin v{Assembly.GetExecutingAssembly().GetName().Version} initialized");
