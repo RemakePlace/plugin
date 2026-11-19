@@ -240,7 +240,7 @@ public class SharedGroup : IDisposable
     
     public unsafe void SetCustomMaterial(string path)
     {
-        Svc.Log.Verbose($"Attempting to set material {path}");
+        Svc.Log.Verbose($"Attempting to set custom material {path}");
         
         if (Data.IsNull) return;
         Pointer<BgObject> graphics = GetGraphics();
@@ -250,7 +250,7 @@ public class SharedGroup : IDisposable
         BgObjectStainBuffer* stain = graphics.Value->StainBuffer;
         if (stain is null) return;
         
-        Svc.Log.Verbose($"Setting material {path}");
+        Svc.Log.Verbose($"Setting custom material {path}");
         stain->SetCustomMaterialResource(path);
     }
     
@@ -267,7 +267,7 @@ public class SharedGroup : IDisposable
         }
         catch (Exception e)
         {
-            Svc.Log.Error($"Failed to material flower {key}", e);
+            Svc.Log.Error($"Failed to load material {key}", e);
         }
     }
 
