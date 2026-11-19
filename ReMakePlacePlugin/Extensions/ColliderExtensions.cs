@@ -34,10 +34,10 @@ public enum MaterialType : sbyte
     Metal = 0x06,
     Gravel = 0x07,
     Leaf = 0x08,
-    Powder = 0x09, // could be wrong
+    Powder = 0x09,
     Carpet = 0x0A,
     Snow = 0x0B,
-    Water1 = 0x0C, // only used on a few water related items... for some reason
+    Water1 = 0x0C,
     Water2 = 0x0D,
     Mesh = 0x0E,
     Sticky = 0x0F
