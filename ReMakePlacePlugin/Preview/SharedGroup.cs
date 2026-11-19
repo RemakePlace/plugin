@@ -134,7 +134,12 @@ public class SharedGroup : IDisposable
         transform->Scale = Scale;
         
         Data.Value->SetTransformImpl(transform);
-        SetCollisionMask(MaterialFlag.PlayerCollision | MaterialFlag.CameraCollision); // Slightly risky, needs extensive testing to make sure this is safe!
+        Data.Value->SetColliderActive(false);
+        
+        // Some notes on this masking approach:
+        // - Preview furniture will cause pumps / snapping to occur with real furniture
+        // - Some furniture just... still interacts with the player.
+        // SetCollisionMask(MaterialFlag.PlayerCollision | MaterialFlag.CameraCollision); // Very risky, needs extensive testing to make sure this is safe!
 
         foreach (Pointer<ChildNodeInstance> ptr in Data.Value->Instances.Instances)
         {
@@ -173,7 +178,7 @@ public class SharedGroup : IDisposable
     
     public void SetColor(Vector4? color)
     {
-        if (Data == null || TrySetColor(Color)) return;
+        if (Data == null || TrySetColor(color)) return;
         FrameworkQueue.Enqueue(ApplyStainTask);
     }
 
