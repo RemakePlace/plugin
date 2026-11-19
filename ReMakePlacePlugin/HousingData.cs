@@ -84,7 +84,7 @@ public class HousingData
         _mediumFishprint = new Dictionary<ushort, uint>();
         _largeFishprint = new Dictionary<ushort, uint>();
         _extraLargeFishprint = new Dictionary<ushort, uint>();
-        _painting = new Dictionary<ushort, uint>();
+        _painting = new Dictionary<ushort, uint>(); //could make a reverse for painting lookups?
 
         var materialSheet = Svc.Data.GetExcelSheet<VaseFlower>();
 
@@ -150,6 +150,11 @@ public class HousingData
     public bool TryGetStain(uint id, out Stain stain)
     {
         return _stainDict.TryGetValue(id, out stain);
+    }
+
+    public ushort GetPaintingMaterial(uint itemId)
+    {
+        return _painting.FirstOrDefault(p => p.Value == itemId).Key;
     }
 
     public uint GetMaterialItemKey(uint itemId, ushort material)

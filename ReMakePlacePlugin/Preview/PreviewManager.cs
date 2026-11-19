@@ -122,7 +122,8 @@ public class PreviewManager : IAsyncDisposable
         // 95 == Painting
         if (materialRow.ItemUICategory.RowId == 95)
         {
-            return $"bgcommon/hou/indoor/pic/ta/{materialRow.AdditionalData.RowId:0000}/material/pic_ta_2{materialRow.AdditionalData.RowId:0000}a.mtrl";
+            var painting = HousingData.Instance.GetPaintingMaterial(materialItem);
+            return $"bgcommon/hou/indoor/pic/ta/{painting:0000}/material/pic_ta_2{painting:0000}a.mtrl";
         }
 
         return string.Empty;
