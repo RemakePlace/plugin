@@ -12,7 +12,9 @@ using FFXIVClientStructs.FFXIV.Client.LayoutEngine.Group;
 using FFXIVClientStructs.FFXIV.Client.LayoutEngine.Layer;
 using FFXIVClientStructs.FFXIV.Client.LayoutEngine.Node;
 using FFXIVClientStructs.FFXIV.Client.System.Memory;
+using FFXIVClientStructs.FFXIV.Common.Component.BGCollision;
 using FFXIVClientStructs.Interop;
+using ReMakePlacePlugin.Extensions;
 using ReMakePlacePlugin.Util;
 
 namespace ReMakePlacePlugin.Preview;
@@ -129,7 +131,7 @@ public class SharedGroup : IDisposable
         transform->Scale = Scale;
         
         Data.Value->SetTransformImpl(transform);
-        Data.Value->SetColliderActive(false);
+        SetCollisionMask(MaterialFlag.PlayerCollision | MaterialFlag.CameraCollision); // Slightly risky, needs extensive testing to make sure this is safe!
 
         foreach (Pointer<ChildNodeInstance> ptr in Data.Value->Instances.Instances)
         {
@@ -148,8 +150,24 @@ public class SharedGroup : IDisposable
             graphics->UpdateRender();
         }
     }
+
+    public unsafe void SetCollisionMask(MaterialFlag flag, bool enabled = true)
+    {
+        if (Data.IsNull) return;
+        foreach (Pointer<ChildNodeInstance> instance in Data.Value->Instances.Instances)
+        {
+            if (instance.IsNull) continue;
+
+            if (instance.Value->Instance->GetCollider() == null) continue;
+
+            Pointer<Collider> coll = instance.Value->Instance->GetCollider();
+
+            if (coll.IsNull) continue;
+            coll.SetMaterialMask(flag, enabled);
+        }
+    }
     
-    public unsafe void SetColor(Vector4? color)
+    public void SetColor(Vector4? color)
     {
         if (Data == null || TrySetColor(Color)) return;
         FrameworkQueue.Enqueue(ApplyStainTask);
