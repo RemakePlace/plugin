@@ -169,10 +169,14 @@ public class ConfigurationWindow : Window, IDisposable
         return true;
     }
 
-    private bool CheckModeForPreview()
+    private unsafe bool CheckModeForPreview()
     {
-        //TODO: Check if in correctly sized house
-        return true;
+        HousingModule* module = Memory.Instance.HousingModule;
+        if (module->IsIndoors())
+            return true;
+
+        // Returns false if not in a plot, true if in a plot.
+        return !module->IsOutdoors() || (byte)(module->currentTerritory->Plot + 1) != 0;
     }
 
     private void SaveLayoutToFile()
@@ -444,7 +448,8 @@ public class ConfigurationWindow : Window, IDisposable
         false,
         "Select a file to open",
         menuDimensions.X);
-        
+
+        bool allowPreview = CheckModeForPreview();
         DrawMainMenuButton(CurrentlyPreviewing ? "Stop Previewing" : "Preview", () =>
         {
             if (CurrentlyPreviewing)
@@ -458,7 +463,7 @@ public class ConfigurationWindow : Window, IDisposable
             {
                 ApplyPreviewFromFile();
             }
-        }, false, "Preview the layout!", menuDimensions.X);
+        }, !allowPreview, allowPreview ? "Preview the layout!" : "You must be within a plot to preview!", menuDimensions.X);
 
         DrawMainMenuButton("Apply", () =>
         {

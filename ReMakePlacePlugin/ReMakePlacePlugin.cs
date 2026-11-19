@@ -1119,8 +1119,16 @@ public class ReMakePlacePlugin : IDalamudPlugin
         }
 
         var placeName = row.Name.ToString();
+        byte currentPlot = (byte)(mgr->Plot + 1);
 
-        PlotLocation = Plots.Map[placeName][mgr->Plot + 1];
+        // overflow, implies we're not in a plot.
+        if (currentPlot == 0) 
+        {
+            LogError("Not currently in a plot!");
+            return;
+        }
+        
+        PlotLocation = Plots.Map[placeName][currentPlot];
     }
 
 
