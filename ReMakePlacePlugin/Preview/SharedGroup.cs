@@ -2,6 +2,7 @@
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
+using Dalamud.Plugin.Services;
 using Dalamud.Utility;
 using Dalamud.Utility.Numerics;
 using ECommons.DalamudServices;
@@ -115,7 +116,7 @@ public class SharedGroup : IDisposable
         if (!MaterialPath.IsNullOrEmpty()) SetMaterial(MaterialPath);
         if (MaterialKey != 0) LoadExtraMaterial(MaterialKey);
         
-        Svc.Framework.RunOnTick(() => FrameworkQueue.Enqueue(ApplyStainTask), delayTicks: 1, cancellationToken: Token);
+        Svc.Framework.RunOnTick(() => ApplyStainTask(null!), delayTicks: 1, cancellationToken: Token);
     }
 
     private unsafe bool IsLoaded()
@@ -179,7 +180,8 @@ public class SharedGroup : IDisposable
     public void SetColor(Vector4? color)
     {
         if (Data == null || TrySetColor(color)) return;
-        FrameworkQueue.Enqueue(ApplyStainTask);
+        // FrameworkQueue.Enqueue(ApplyStainTask);
+        ApplyStainTask(null!);
     }
 
     private unsafe bool TrySetColor(Vector4? color)
@@ -203,17 +205,19 @@ public class SharedGroup : IDisposable
         return layout->StainNeedsUpdating != 1;
     }
 
-    private void ApplyStainTask()
+    private void ApplyStainTask(IFramework framework)
     {
         Svc.Log.Verbose($"Applying stain {Color} to {Path}");
         if (Data == null || TrySetColor(Color))
         {
             Svc.Log.Verbose($"Successfully applied stain!");
+            Svc.Framework.Update -= ApplyStainTask;
             return;
         }
         
         Svc.Log.Verbose($"Failed to apply stain, attempting again..");
-        FrameworkQueue.Enqueue(ApplyStainTask);
+        Svc.Framework.Update += ApplyStainTask;
+        // FrameworkQueue.Enqueue(ApplyStainTask);
     }
 
     public unsafe void SetTransparency(float transparency)
