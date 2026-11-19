@@ -74,6 +74,7 @@ public class SharedGroup : IDisposable
         {
             Memory.SharedGroupLayoutFunctions.Ctor(Data);
             Memory.SharedGroupLayoutFunctions.Init(Data, Path);
+            Data.Value->SetColliderActive(false);
             
             UpdateTransform();
             return true;
@@ -105,8 +106,9 @@ public class SharedGroup : IDisposable
         // If in the future there is an effort to make a local house editor, that will need to change.
     }
 
-    private void OnLoad()
+    private unsafe void OnLoad()
     {
+        Data.Value->SetColliderActive(true);
         UpdateTransform();
         
         if (!MaterialPath.IsNullOrEmpty())
@@ -141,7 +143,8 @@ public class SharedGroup : IDisposable
             // Kill the chairs (and beds)! Just in case. For some reason you cant sit in them without this anyway- but I remember that being different.
             if (instance->Id.Type == InstanceType.ChairMarker)
             {
-                instance->SetActive(false);
+                instance->Deinit();
+                instance->Dtor(0);
             }
             
             var graphics = (DrawObject*)instance->GetGraphics();
