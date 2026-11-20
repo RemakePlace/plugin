@@ -274,6 +274,8 @@ public class SharedGroup : IDisposable
     public unsafe void Dispose()
     {
         Svc.Log.Verbose($"Disposing {Path}");
+        
+        Svc.Framework.Update -= ApplyStainTask;
         ThreadSafety.AssertMainThread();
 
         if (Data == null) return;
