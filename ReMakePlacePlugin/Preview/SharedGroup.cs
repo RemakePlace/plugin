@@ -264,8 +264,8 @@ public class SharedGroup : IDisposable
     /// Load a "sub material" for this group. This generally applies to flowers, as they have different colors to load.
     /// </summary>
     /// <param name="slot">The child slot to load the material</param>
-    /// <param name="key">The model key to load. Found via VaseFlower or GardeningSeed sheets</param>
-    /// <param name="subKey">The sub model key to load. Also found via VaseFlower. For garden patches this may be a growth state, currently unsure.</param>
+    /// <param name="key">Not entirely sure what this is, but for flowers it is the Unknown1 column in VaseFlower</param>
+    /// <param name="subKey">VaseFlower Unknown2, the actual color to load</param>
     public unsafe void LoadSubMaterial(uint slot, ushort key, ushort subKey)
     {
         Svc.Log.Verbose($"Attempting to load sub material {key}");
