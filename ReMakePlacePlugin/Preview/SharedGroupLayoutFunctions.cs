@@ -18,6 +18,7 @@ public unsafe class SharedGroupLayoutFunctions
     internal delegate byte LoadSgbDelegate(SharedGroupLayoutInstance* self, byte* pathBytes);
     internal delegate LayerManager* LayerCtorDelegate(LayerManager* self, FFXIVClientStructs.FFXIV.Client.LayoutEngine.LayoutManager* owner);
     internal delegate bool TryLoadMaterialDelegate(SharedGroupLayoutInstance* self, long slot, ushort key);
+    internal delegate bool TryLoadSubMaterialDelegate(SharedGroupLayoutInstance* self, uint slot, ushort key, ushort subKey);
     
     [Signature("48 89 5C 24 ?? 48 89 74 24 ?? 57 48 83 EC ?? 33 F6 C7 41 ?? ?? ?? ?? ?? 48 8D 05 ?? ?? ?? ?? 48 89 71 ?? ?? ?? ?? 48 8B F9 48 89 71 ?? 89 71 ?? 48 89 71 ?? C7 41 ?? ?? ?? ?? ?? 48 83 C1 ?? E8 ?? ?? ?? ?? 48 89 77")]
     internal CtorDelegate? CtorInternal = null;
@@ -36,6 +37,9 @@ public unsafe class SharedGroupLayoutFunctions
     
     [Signature("E8 ?? ?? ?? ?? 8B D7 45 33 C9")]
     internal TryLoadMaterialDelegate? TryLoadMaterialInternal = null; // Hard to name, but uses the keys provided by VaseFlower sheet
+
+    [Signature("E8 ?? ?? ?? ?? 41 0F B6 47 ?? 0F AB F8")]
+    internal TryLoadSubMaterialDelegate? TryLoadSubMaterialInternal = null;
     
     public SharedGroupLayoutFunctions()
     {
@@ -110,8 +114,16 @@ public unsafe class SharedGroupLayoutFunctions
     public bool TryLoadMaterial(SharedGroupLayoutInstance* self, long slot, ushort key)
     {
         if (TryLoadMaterialInternal == null)
-            throw new InvalidOperationException("LoadVaseFlower sig was not found!");
+            throw new InvalidOperationException("TryLoadMaterial sig was not found!");
         
         return TryLoadMaterialInternal(self, slot, key);
+    }
+
+    public bool TryLoadSubMaterial(SharedGroupLayoutInstance* self, uint slot, ushort key, ushort subKey)
+    {
+        if (TryLoadSubMaterialInternal == null)
+            throw new InvalidOperationException("TryLoadSubMaterial sig was not found!");
+        
+        return TryLoadSubMaterialInternal(self, slot, key, subKey);
     }
 }

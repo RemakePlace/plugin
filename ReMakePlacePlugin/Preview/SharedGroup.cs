@@ -238,22 +238,11 @@ public class SharedGroup : IDisposable
         return null;
     }
     
-    public unsafe void SetCustomMaterial(string path)
-    {
-        Svc.Log.Verbose($"Attempting to set custom material {path}");
-        
-        if (Data.IsNull) return;
-        Pointer<BgObject> graphics = GetGraphics();
-        
-        if (graphics.IsNull) return;
-        
-        BgObjectStainBuffer* stain = graphics.Value->StainBuffer;
-        if (stain is null) return;
-        
-        Svc.Log.Verbose($"Setting custom material {path}");
-        stain->SetCustomMaterialResource(path);
-    }
-    
+    /// <summary>
+    /// Load a "material" for this group. This applies to plants, wallpapers, paintings, and fish prints
+    /// </summary>
+    /// <param name="slot">The child slot to load the material</param>
+    /// <param name="key">The model key to load. Found via VaseFlower or GardeningSeed sheets</param>
     public unsafe void LoadMaterial(long slot, ushort key)
     {
         Svc.Log.Verbose($"Attempting to load material {key}");
@@ -268,6 +257,27 @@ public class SharedGroup : IDisposable
         catch (Exception e)
         {
             Svc.Log.Error($"Failed to load material {key}", e);
+        }
+    }
+
+    /// <summary>
+    /// Load a "sub material" for this group. This generally applies to flowers, as they have different colors to load.
+    /// </summary>
+    /// <param name="slot">The child slot to load the material</param>
+    /// <param name="key">The model key to load. Found via VaseFlower or GardeningSeed sheets</param>
+    /// <param name="subKey">The sub model key to load. Also found via VaseFlower. For garden patches this may be a growth state, currently unsure.</param>
+    public unsafe void LoadSubMaterial(uint slot, ushort key, ushort subKey)
+    {
+        Svc.Log.Verbose($"Attempting to load sub material {key}");
+        if (Data.IsNull) return;
+        try
+        {
+            Memory.SharedGroupLayoutFunctions.TryLoadSubMaterial(Data.Value, slot, key, subKey);
+            Svc.Log.Verbose($"Successfully loaded sub material {key}");
+        }
+        catch (Exception e)
+        {
+            Svc.Log.Error($"Failed to load sub material {key}", e);
         }
     }
 
