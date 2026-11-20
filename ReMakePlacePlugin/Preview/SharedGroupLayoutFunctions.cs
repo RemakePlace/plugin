@@ -19,6 +19,7 @@ public unsafe class SharedGroupLayoutFunctions
     internal delegate LayerManager* LayerCtorDelegate(LayerManager* self, FFXIVClientStructs.FFXIV.Client.LayoutEngine.LayoutManager* owner);
     internal delegate bool TryLoadMaterialDelegate(SharedGroupLayoutInstance* self, long slot, ushort key);
     internal delegate bool TryLoadSubMaterialDelegate(SharedGroupLayoutInstance* self, uint slot, ushort key, ushort subKey);
+    internal delegate bool TryLoadAquariumDataDelegate(SharedGroupLayoutInstance* self, uint slot, ushort key, ushort size);
     
     [Signature("48 89 5C 24 ?? 48 89 74 24 ?? 57 48 83 EC ?? 33 F6 C7 41 ?? ?? ?? ?? ?? 48 8D 05 ?? ?? ?? ?? 48 89 71 ?? ?? ?? ?? 48 8B F9 48 89 71 ?? 89 71 ?? 48 89 71 ?? C7 41 ?? ?? ?? ?? ?? 48 83 C1 ?? E8 ?? ?? ?? ?? 48 89 77")]
     internal CtorDelegate? CtorInternal = null;
@@ -40,6 +41,9 @@ public unsafe class SharedGroupLayoutFunctions
 
     [Signature("E8 ?? ?? ?? ?? 41 0F B6 47 ?? 0F AB F8")]
     internal TryLoadSubMaterialDelegate? TryLoadSubMaterialInternal = null;
+
+    [Signature("E8 ?? ?? ?? ?? EB ?? E8 ?? ?? ?? ?? 8B D7")]
+    internal TryLoadAquariumDataDelegate? TryLoadAquariumDataInternal = null;
     
     public SharedGroupLayoutFunctions()
     {
@@ -125,5 +129,13 @@ public unsafe class SharedGroupLayoutFunctions
             throw new InvalidOperationException("TryLoadSubMaterial sig was not found!");
         
         return TryLoadSubMaterialInternal(self, slot, key, subKey);
+    }
+
+    public bool TryLoadAquariumData(SharedGroupLayoutInstance* self, uint slot, ushort key, ushort size)
+    {
+        if (TryLoadAquariumDataInternal == null)
+            throw new InvalidOperationException("TryLoadAquariumData sig was not found!");
+        
+        return TryLoadAquariumDataInternal(self, slot, key, size);
     }
 }

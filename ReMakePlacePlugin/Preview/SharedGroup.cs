@@ -108,6 +108,14 @@ public class SharedGroup : IDisposable
         UpdateTransform();
         
         if (MaterialKey != 0) LoadMaterial(0, MaterialKey);
+        // Lil example for loading aquarium stuff.
+        // if (Path.Contains("fun_b0_m0655"))
+        // {
+        //     LoadAquariumData(0, 2, 3); // Slot 0 = water type
+        //     LoadAquariumData(1, 5, 3); // Slot 1 = Accessory/Trim model
+        //     LoadAquariumData(2, 116, 3); // Slot 2-5 Fishies
+        //     LoadAquariumData(3, 578, 0);
+        // }
         
         Svc.Framework.RunOnTick(() => ApplyStainTask(null!), delayTicks: 1, cancellationToken: Token);
     }
@@ -278,6 +286,27 @@ public class SharedGroup : IDisposable
         catch (Exception e)
         {
             Svc.Log.Error($"Failed to load sub material {key}", e);
+        }
+    }
+
+    /// <summary>
+    /// Loads aquarium models at specified slots
+    /// </summary>
+    /// <param name="slot">The slot to load the data into. 0 = Water type (AquariumWater sheet), 1 = Accessory, 2-5 = Fish (AquariumFish sheet)</param>
+    /// <param name="key">The model key to load</param>
+    /// <param name="size">Typically the size of the aquarium, but for fish it depends on their size.</param>
+    public unsafe void LoadAquariumData(uint slot, ushort key, ushort size)
+    {
+        Svc.Log.Verbose($"Attempting to load aquarium data {key}");
+        if (Data.IsNull) return;
+        try
+        {
+            Memory.SharedGroupLayoutFunctions.TryLoadAquariumData(Data.Value, slot, key, size);
+            Svc.Log.Verbose($"Successfully loaded aquarium data {key}");
+        }
+        catch (Exception e)
+        {
+            Svc.Log.Error($"Failed to load aquarium data {key}", e);
         }
     }
 
