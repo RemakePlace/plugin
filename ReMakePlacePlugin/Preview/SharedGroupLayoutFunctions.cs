@@ -17,7 +17,7 @@ public unsafe class SharedGroupLayoutFunctions
     internal delegate SharedGroupLayoutInstance* CtorDelegate(SharedGroupLayoutInstance* self);
     internal delegate byte LoadSgbDelegate(SharedGroupLayoutInstance* self, byte* pathBytes);
     internal delegate LayerManager* LayerCtorDelegate(LayerManager* self, FFXIVClientStructs.FFXIV.Client.LayoutEngine.LayoutManager* owner);
-    internal delegate bool TryLoadMaterialDelegate(SharedGroupLayoutInstance* self, nint a2, ushort Key);
+    internal delegate bool TryLoadMaterialDelegate(SharedGroupLayoutInstance* self, long slot, ushort key);
     
     [Signature("48 89 5C 24 ?? 48 89 74 24 ?? 57 48 83 EC ?? 33 F6 C7 41 ?? ?? ?? ?? ?? 48 8D 05 ?? ?? ?? ?? 48 89 71 ?? ?? ?? ?? 48 8B F9 48 89 71 ?? 89 71 ?? 48 89 71 ?? C7 41 ?? ?? ?? ?? ?? 48 83 C1 ?? E8 ?? ?? ?? ?? 48 89 77")]
     internal CtorDelegate? CtorInternal = null;
@@ -103,14 +103,15 @@ public unsafe class SharedGroupLayoutFunctions
     /// Loads material's onto an SGB. Namely; wallpapers, paintings, flowers, and fish prints.
     /// </summary>
     /// <param name="self">The group to load onto</param>
+    /// <param name="slot">The child slot to load into</param>
     /// <param name="key">Key for the material, found via the VaseFlower sheet</param>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException"></exception>
-    public bool TryLoadMaterial(SharedGroupLayoutInstance* self, ushort key)
+    public bool TryLoadMaterial(SharedGroupLayoutInstance* self, long slot, ushort key)
     {
         if (TryLoadMaterialInternal == null)
             throw new InvalidOperationException("LoadVaseFlower sig was not found!");
         
-        return TryLoadMaterialInternal(self, 0, key);
+        return TryLoadMaterialInternal(self, slot, key);
     }
 }

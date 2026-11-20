@@ -107,7 +107,7 @@ public class SharedGroup : IDisposable
     {
         UpdateTransform();
         
-        if (MaterialKey != 0) LoadMaterial(MaterialKey);
+        if (MaterialKey != 0) LoadMaterial(0, MaterialKey);
         
         Svc.Framework.RunOnTick(() => ApplyStainTask(null!), delayTicks: 1, cancellationToken: Token);
     }
@@ -254,7 +254,7 @@ public class SharedGroup : IDisposable
         stain->SetCustomMaterialResource(path);
     }
     
-    public unsafe void LoadMaterial(ushort key)
+    public unsafe void LoadMaterial(long slot, ushort key)
     {
         Svc.Log.Verbose($"Attempting to load material {key}");
 
@@ -262,7 +262,7 @@ public class SharedGroup : IDisposable
 
         try
         {
-            Memory.SharedGroupLayoutFunctions.TryLoadMaterial(Data.Value, key);
+            Memory.SharedGroupLayoutFunctions.TryLoadMaterial(Data.Value, slot, key);
             Svc.Log.Verbose($"Successfully loaded material {key}");
         }
         catch (Exception e)
