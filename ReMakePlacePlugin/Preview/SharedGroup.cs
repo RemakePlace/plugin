@@ -318,12 +318,9 @@ public class SharedGroup : IDisposable
         Svc.Framework.Update -= ApplyStainTask;
         ThreadSafety.AssertMainThread();
 
-        if (Data == null) return;
-        
+        if (Data.IsNull) return;
         Data.Value->Deinit();
-        Data.Value->Dtor(0);
-
-        IMemorySpace.Free(Data.Value);
+        Data.Value->Dtor(1);
         Data = null;
     }
 }
