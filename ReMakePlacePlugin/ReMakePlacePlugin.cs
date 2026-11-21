@@ -20,9 +20,11 @@ using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using ReMakePlacePlugin.Preview;
 using static ReMakePlacePlugin.Memory;
 using AtkValueType = FFXIVClientStructs.FFXIV.Component.GUI.AtkValueType;
 using HousingFurniture = Lumina.Excel.Sheets.HousingFurniture;
+using Task = System.Threading.Tasks.Task;
 using TaskManager = ECommons.Automation.NeoTaskManager.TaskManager;
 
 namespace ReMakePlacePlugin;
@@ -75,6 +77,8 @@ public class ReMakePlacePlugin : IDalamudPlugin
 
     private TaskManager TaskManager;
 
+    public PreviewManager PreviewManager { get; private set; } = null;
+
     public ReMakePlacePlugin(IDalamudPluginInterface pi)
     {
         ECommonsMain.Init(pi, this);
@@ -119,6 +123,8 @@ public class ReMakePlacePlugin : IDalamudPlugin
         };
 
         TaskManager = new TaskManager(taskManagerConfig);
+        
+        PreviewManager = new PreviewManager(this);
 
         Svc.Log.Info($"ReMakePlace Plugin v{Assembly.GetExecutingAssembly().GetName().Version} initialized");
     }
@@ -146,6 +152,7 @@ public class ReMakePlacePlugin : IDalamudPlugin
 
     public void Dispose()
     {
+        PreviewManager.Dispose();
         Gui?.Dispose();
 
         Svc.ClientState.TerritoryChanged -= TerritoryChanged;
@@ -1089,8 +1096,16 @@ public class ReMakePlacePlugin : IDalamudPlugin
         }
 
         var placeName = row.Name.ToString();
+        byte currentPlot = (byte)(mgr->Plot + 1);
 
-        PlotLocation = Plots.Map[placeName][mgr->Plot + 1];
+        // overflow, implies we're not in a plot.
+        if (currentPlot == 0) 
+        {
+            LogError("Not currently in a plot!");
+            return;
+        }
+        
+        PlotLocation = Plots.Map[placeName][currentPlot];
     }
 
 

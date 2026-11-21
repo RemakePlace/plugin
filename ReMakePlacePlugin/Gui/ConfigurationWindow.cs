@@ -15,6 +15,7 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
+using ReMakePlacePlugin.Preview;
 using static ReMakePlacePlugin.Gui.UiHelpers;
 using static ReMakePlacePlugin.ReMakePlacePlugin;
 
@@ -419,6 +420,22 @@ public class ConfigurationWindow : Window, IDisposable
         false,
         "Select a file to open",
         menuDimensions.X);
+
+        bool allowPreview = Plugin.PreviewManager.CheckModeForPreview();
+        bool currentlyPreviewing = Plugin.PreviewManager.IsPreviewing;
+        DrawMainMenuButton(currentlyPreviewing ? "Stop Previewing" : "Preview", () =>
+        {
+            if (currentlyPreviewing)
+            {
+                Svc.Framework.Run(() => Plugin.PreviewManager.Clear());
+                if (Memory.Instance.GetCurrentTerritory() == Memory.HousingArea.Indoors)
+                    PreviewManager.ToggleRealFurniture(true);
+            }
+            else
+            {
+                Plugin.PreviewManager.PreviewLayout();
+            }
+        }, !allowPreview, allowPreview ? "Preview the layout!" : "You must be within a plot to preview!", menuDimensions.X);
 
         DrawMainMenuButton("Apply", () =>
         {
