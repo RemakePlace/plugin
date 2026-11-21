@@ -169,16 +169,6 @@ public class ConfigurationWindow : Window, IDisposable
         return true;
     }
 
-    private unsafe bool CheckModeForPreview()
-    {
-        HousingModule* module = Memory.Instance.HousingModule;
-        if (module->IsIndoors())
-            return true;
-
-        // Returns false if not in a plot, true if in a plot.
-        return !module->IsOutdoors() || (byte)(module->currentTerritory->Plot + 1) != 0;
-    }
-
     private void SaveLayoutToFile()
     {
         if (!CheckModeForSave()) return;
@@ -242,24 +232,6 @@ public class ConfigurationWindow : Window, IDisposable
             {
                 LogError($"Apply Dyes Error: {e.Message}", e.StackTrace);
             }
-        }
-    }
-
-    private void ApplyPreviewFromFile()
-    {
-        if (Config.SaveLocation.IsNullOrEmpty()) return;
-
-        try
-        {
-            SaveLayoutManager.ImportLayout(Config.SaveLocation);
-
-            if (!CheckModeForPreview()) return;
-            Plugin.PreviewItems();
-            CurrentlyPreviewing = true;
-        }
-        catch (Exception e)
-        {
-            Svc.Log.Error($"Apply Preview Error: {e.Message}", e.StackTrace);
         }
     }
 
@@ -449,19 +421,19 @@ public class ConfigurationWindow : Window, IDisposable
         "Select a file to open",
         menuDimensions.X);
 
-        bool allowPreview = CheckModeForPreview();
-        DrawMainMenuButton(CurrentlyPreviewing ? "Stop Previewing" : "Preview", () =>
+        bool allowPreview = Plugin.PreviewManager.CheckModeForPreview();
+        bool currentlyPreviewing = Plugin.PreviewManager.IsPreviewing;
+        DrawMainMenuButton(currentlyPreviewing ? "Stop Previewing" : "Preview", () =>
         {
-            if (CurrentlyPreviewing)
+            if (currentlyPreviewing)
             {
                 Svc.Framework.Run(() => Plugin.PreviewManager.Clear());
-                CurrentlyPreviewing = false;
                 if (Memory.Instance.GetCurrentTerritory() == Memory.HousingArea.Indoors)
                     PreviewManager.ToggleRealFurniture(true);
             }
             else
             {
-                ApplyPreviewFromFile();
+                Plugin.PreviewManager.PreviewLayout();
             }
         }, !allowPreview, allowPreview ? "Preview the layout!" : "You must be within a plot to preview!", menuDimensions.X);
 

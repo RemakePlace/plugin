@@ -19,16 +19,20 @@ namespace ReMakePlacePlugin.Preview;
 public class PreviewManager : IDisposable
 {
     public readonly Dictionary<uint, SharedGroup> Furniture = [];
-    private CancellationTokenSource _cts = new();
+    public bool IsPreviewing { get; private set; }
     
-    public PreviewManager()
+    private CancellationTokenSource _cts = new();
+    private ReMakePlacePlugin Plugin { get; init; }
+
+    public PreviewManager(ReMakePlacePlugin plugin)
     {
         Svc.ClientState.ZoneInit += OnZoneInit;
+        Plugin = plugin;
     }
 
     private void OnZoneInit(ZoneInitEventArgs obj)
     {
-        ReMakePlacePlugin.CurrentlyPreviewing = false;
+        IsPreviewing = false;
         Task.Run(() => Clear());
     }
     
@@ -79,6 +83,30 @@ public class PreviewManager : IDisposable
             group->SetActive(enabled);
             group->SetColliderActive(true); // cool that this works :D
         }
+    }
+    
+    /// <summary>
+    /// Preview all the items in the current housing layout.
+    /// </summary>
+    public void PreviewLayout()
+    {
+        SaveLayoutManager.ImportLayout(Plugin.Config.SaveLocation);
+        if (!CheckModeForPreview()) return;
+        
+        if (Memory.Instance.GetCurrentTerritory() == Memory.HousingArea.Indoors)
+        {
+            var queue = new Queue<HousingItem>(Plugin.InteriorItemList);
+            ToggleRealFurniture(false);
+            Svc.Framework.RunOnTick(() => PreviewInteriorItems(queue));
+        }
+        else if (Memory.Instance.GetCurrentTerritory() == Memory.HousingArea.Outdoors)
+        {
+            Plugin.GetPlotLocation(); // update current plot
+            var queue = new Queue<HousingItem>(Plugin.ExteriorItemList);
+            Svc.Framework.RunOnTick(() => PreviewExteriorItems(queue));
+        }
+
+        IsPreviewing = true;
     }
 
     /// <summary>
@@ -188,6 +216,16 @@ public class PreviewManager : IDisposable
             }
         }
     }
+    
+    public unsafe bool CheckModeForPreview()
+    {
+        HousingModule* module = Memory.Instance.HousingModule;
+        if (module->IsIndoors())
+            return true;
+
+        // Returns false if not in a plot, true if in a plot.
+        return !module->IsOutdoors() || (byte)(module->currentTerritory->Plot + 1) != 0;
+    }
 
     public SharedGroup this[uint id] => Furniture[id];
 
@@ -215,6 +253,7 @@ public class PreviewManager : IDisposable
         } 
         
         Furniture.Clear();
+        IsPreviewing = false;
         
         if (!disposing) _cts = new CancellationTokenSource();
     }

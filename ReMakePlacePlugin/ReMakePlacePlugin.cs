@@ -55,8 +55,6 @@ public class ReMakePlacePlugin : IDalamudPlugin
 
     public static bool CurrentlyDyeingItems = false;
 
-    public static bool CurrentlyPreviewing = false;
-
     public static bool OriginalPlaceAnywhere = false;
 
     public static bool ApplyChange = false;
@@ -126,7 +124,7 @@ public class ReMakePlacePlugin : IDalamudPlugin
 
         TaskManager = new TaskManager(taskManagerConfig);
         
-        PreviewManager = new PreviewManager();
+        PreviewManager = new PreviewManager(this);
 
         Svc.Log.Info($"ReMakePlace Plugin v{Assembly.GetExecutingAssembly().GetName().Version} initialized");
     }
@@ -1084,25 +1082,6 @@ public class ReMakePlacePlugin : IDalamudPlugin
 
         }
 
-    }
-
-    /// <summary>
-    /// Preview all the items in the current housing layout.
-    /// </summary>
-    public void PreviewItems()
-    {
-        if (Memory.Instance.GetCurrentTerritory() == HousingArea.Indoors)
-        {
-            var queue = new Queue<HousingItem>(InteriorItemList);
-            PreviewManager.ToggleRealFurniture(false);
-            Svc.Framework.RunOnTick(() => PreviewManager.PreviewInteriorItems(queue));
-        }
-        else if (Memory.Instance.GetCurrentTerritory() == HousingArea.Outdoors)
-        {
-            GetPlotLocation(); // update current plot
-            var queue = new Queue<HousingItem>(ExteriorItemList);
-            Svc.Framework.RunOnTick(() => PreviewManager.PreviewExteriorItems(queue));
-        }
     }
 
     public unsafe void GetPlotLocation()
