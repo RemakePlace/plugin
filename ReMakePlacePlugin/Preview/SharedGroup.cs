@@ -135,6 +135,7 @@ public class SharedGroup : IDisposable
         transform->Rotation = Rotation;
         transform->Scale = Scale;
         
+        Data.Value->SetActive(true); // Doing this specifically fixes mannequin models not spawning- however if it causes issues down the road we may have to remove this line
         Data.Value->SetTransformImpl(transform);
         Data.Value->SetColliderActive(false);
         

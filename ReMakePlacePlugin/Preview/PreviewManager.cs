@@ -43,6 +43,17 @@ public class PreviewManager : IDisposable
 
         HousingFurnitureManager* furnMan = man->GetFurnitureManager();
         if (furnMan is null) return;
+
+        GameObjectManager* gameObjectManager = GameObjectManager.Instance();
+        if (gameObjectManager is null) return;
+
+        // Toggle event npcs
+        foreach (Pointer<GameObject> obj in gameObjectManager->Objects.IndexSorted)
+        {
+            if (obj.IsNull) continue;
+            if (obj.Value->GetObjectKind() != ObjectKind.EventNpc) continue;
+            obj.Value->SetVisibility((byte)(enabled ? 0 : 1));
+        }
         
         ref var arr = ref furnMan->ObjectManager.ObjectArray;
         int max = Math.Min(arr.Objects.Length, arr.ObjectCount);
@@ -55,6 +66,12 @@ public class PreviewManager : IDisposable
             
             var obj = (HousingObject*)arr.Objects[index].Value;
             if (obj == null) continue;
+
+            if (!Memory.Instance.IsHousingMode() && HousingData.Instance.TryGetFurniture(obj->HousingObjectId.Id, out var furn))
+            {
+                // Skip Mannequin and Vendors
+                if (furn.UsageType is 15 or 3) continue;
+            }
 
             SharedGroupLayoutInstance* group = obj->SharedGroupLayoutInstance;
             if (group == null) continue;
@@ -205,7 +222,11 @@ public class PreviewManager : IDisposable
     public void Dispose()
     {
         Svc.ClientState.ZoneInit -= OnZoneInit;
-        ToggleRealFurniture(true);
-        Clear(true);
+
+        Svc.Framework.Run(() =>
+        {
+            ToggleRealFurniture(true);
+            Clear(true);
+        });
     }
 }
